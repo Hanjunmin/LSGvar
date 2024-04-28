@@ -1,6 +1,9 @@
 tool_path="/home/jmhan/SDR/"
 ref_path="/home/jmhan/breakpoints/chm13v2.0.fa"
-hap1_path="/home/jmhan/SDR/genome/GRCh38/GCF_000001405.26_GRCh38_genomic.chrNames.fna"
+#hap1_path="/home/jmhan/SDR/genome/chimpanzee/mPanTro3.hap1.cur.20231122.fasta"
+hap1_path="/home/jmhan/SDR/run_chimpanzee/genomedata/query_h1.fa"
+#hap2_path="/home/jmhan/SDR/genome/chimpanzee/mPanTro3.hap2.cur.20231122.fasta"
+hap2_path="/home/jmhan/SDR/run_chimpanzee/genomedata/query_h2.fa"
 ref_species="human"
 query_species=""
 species=("human" "chimpanzee")
@@ -8,207 +11,71 @@ Dct=TRUE
 nowdic=$(pwd)
 mappingtsv="${nowdic}/chromosome_mapping.tsv"
 
-## minimap  RepeatMasker(Dct=TRUE) trf(Dct=TRUE) snakemake rustybam seqkit samtools
-#less mPanTro3.hap1.cur.20231122.fasta | sed -E 's/chr([0-9]+|[XY])_hap1_//' | sed 's/hsa/chr/' >new.fasta
-#awk '/^>/ {if ($1 !~ /random/) {flag=1;} else {flag=0}} flag'
-## 上述为简单处理fasta原始文件，将染色体名字更改，同时去除含有random的序列
 
-##----------------------------- step1.minimap
 nohup minimap2 -t 12 -cx asm20 --secondary=no --eqx -Y -K 8G -s 1000 $ref_path $hap1_path  -o hm_prihap1.paf &
-
-## 先生成一个saffire简单看一下比对，进而得到mapping.tsv
-rustybam trim-paf hm_prihap1.paf `#trims back alignments that align the same query sequence more than once` \
-    | rustybam break-paf --max-size 5000 `#breaks the alignment into smaller pieces on indels of 5000 bases or more` \
-    | rustybam filter --paired-len 100000 `#filters for query sequences that have at least 100,000 bases aligned to a target across all alignments.` \
-    | rustybam stats --paf `#calculates statistics from the trimmed paf file` \
-    > test.saffire
-
-
-
-
+nohup minimap2 -t 12 -cx asm20 --secondary=no --eqx -Y -K 8G -s 1000 $ref_path $hap2_path  -o hm_prihap2.paf &
 python "${tool_path}scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap1.paf -1 6 -2 1 |awk '{print $6,$7,$1,$2}' >p_c_chrlen1.txt
+python "${tool_path}scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap2.paf -1 6 -2 1 |awk '{print $6,$7,$1,$2}' >p_c_chrlen2.txt
 
-## -----------------------------step2.centromere
-if [[ $Dct==TRUE ]];then ##如果使用者要求删除端粒和着丝粒
-if [[ " ${species[@]}" =~ " $ref_species " ]]; then
-	refcen="${tool_path}database/${ref_species}cen.txt"  ##humancen.txt
-else
-	if [ ! -d "${nowdic}/centromere" ]; then
-	mkdir "${nowdic}/centromere" && cd "${nowdic}/centromere"
-	fi
-	if [ ! -d "${nowdic}/centromere/ref" ]; then
-	mkdir "${nowdic}/centromere/ref" && cd "${nowdic}/centromere/ref"
-	fi
-	RepeatMasker -e ncbi -species human -dir ./  -pa 24 $ref_path
-	find "${nowdic}/centromere/ref" -name '*.out' |xargs grep 'centr' >refcen.txt
-	
-	Rscript "${tool_path}scripts/cen_process.r" "REF" "${nowdic}/p_c_chrlen1.txt"  "${nowdic}/centromere/ref/refcen.txt" "${nowdic}/centromere/end_refcen.txt" 
-fi
-#----
-if [[ " ${species[@]}" =~ " $query_species " ]]; then
-	quecen="${tool_path}database/${query_species}cen.txt"  ##***cen.txt
-else
-	if [ ! -d "${nowdic}/centromere" ]; then
-	mkdir "${nowdic}/centromere" && cd "${nowdic}/centromere"
-	fi
-	if [ ! -d "${nowdic}/centromere/que" ]; then
-	mkdir "${nowdic}/centromere/que" && cd "${nowdic}/centromere/que"
-	fi
-RepeatMasker -e ncbi -species human -dir ./  -pa 24 $hap1_path
-find "${nowdic}/centromere/que" -name '*.out' |xargs grep 'centr' >quecen.txt
-
-Rscript "${tool_path}scripts/cen_process.r" "QUE" "${nowdic}/p_c_chrlen1.txt"  "${nowdic}/centromere/que/quecen.txt" "${nowdic}/centromere/end_quecen.txt" 
-fi
-fi
-## -----------------------------step3.telomere
-if [[ $Dct==TRUE ]];then ##如果使用者要求删除端粒和着丝粒
-if [[ " ${species[@]}" =~ " $ref_species " ]]; then
-	reftel="${tool_path}database/${ref_species}tel.txt"  ##humantel.txt
-else
-	if [ ! -d "${nowdic}/telomere" ]; then
-	mkdir "${nowdic}/telomere" && cd "${nowdic}/telomere"
-	fi
-	if [ ! -d "${nowdic}/telomere/ref" ]; then
-	mkdir "${nowdic}/telomere/ref" && cd "${nowdic}/telomere/ref"
-	fi
-	jq --arg ref_path "$ref_path" '.assembly = $ref_path' "${tool_path}/scripts/config.json" > "${tool_path}/scripts/config_new.json" && mv "${tool_path}/scripts/config_new.json" "${tool_path}/scripts/config.json"
-	jq --arg prefix "REF" '.prefix = $prefix' "${tool_path}/scripts/config.json" > "${tool_path}/scripts/config_new.json" && mv "${tool_path}/scripts/config_new.json" "${tool_path}/scripts/config.json"
-	snakemake --configfile "${tool_path}/scripts/config.json" -s "${tool_path}/scripts/trf.smk" -p -j 50 --latency-wait 30 --restart-time 0
-	(grep -E 'CCCTAA' "${nowdic}/telomere/ref/REF.trf.bed" | awk '{
-    count = 0  # 重置计数器，以便在处理新的行时重新计数
-    for(j=1; j<=length($16); j++) {
-        if (substr($16, j, 6) == "CCCTAA") {
-            count++
-        }
-    }
-    if (count>30){print $1,$2,$3,count}
-}') > "${nowdic}/telomere/ref_telo.txt"
-
-(grep -E 'TTAGGG' "${nowdic}/telomere/ref/REF.trf.bed"  | awk '{
-    count = 0  # 重置计数器，以便在处理新的行时重新计数
-    for(j=1; j<=length($16); j++) {
-        if (substr($16, j, 6) == "TTAGGG") {
-            count++
-        }
-    }
-    if (count>30){print $1,$2,$3,count}
-}') >> "${nowdic}/telomere/ref_telo.txt"
-Rscript "${tool_path}scripts/telo_process.r" "REF" "${nowdic}/telomere/ref_telo.txt" "${nowdic}/p_c_chrlen1.txt"  "${nowdic}/telomere/end_reftelo.txt" 
-fi
-#----
-if [[ " ${species[@]}" =~ " $query_species " ]]; then
-	quecen="${tool_path}database/${query_species}tel.txt"  ##***tel.txt
-else
-	if [ ! -d "${nowdic}/telomere" ]; then
-	mkdir "${nowdic}/telomere" && cd "${nowdic}/telomere"
-	fi
-	if [ ! -d "${nowdic}/telomere/que" ]; then
-	mkdir "${nowdic}/telomere/que" && cd "${nowdic}/telomere/que"
-	fi
-	jq --arg hap1_path "$hap1_path" '.assembly = $hap1_path' "${tool_path}/scripts/config.json" > "${tool_path}/scripts/config_new.json" && mv "${tool_path}/scripts/config_new.json" "${tool_path}/scripts/config.json"
-	jq --arg prefix "QUE" '.prefix = $prefix' "${tool_path}/scripts/config.json" > "${tool_path}/scripts/config_new.json" && mv "${tool_path}/scripts/config_new.json" "${tool_path}/scripts/config.json"
-snakemake --configfile "${tool_path}/scripts/config.json" -s "${tool_path}/scripts/trf.smk" -p -j 50 --latency-wait 30 --restart-time 0
-(grep -E 'CCCTAA' "${nowdic}/telomere/que/QUE.trf.bed"  | awk '{
-    count = 0  # 重置计数器，以便在处理新的行时重新计数
-    for(j=1; j<=length($16); j++) {
-        if (substr($16, j, 6) == "CCCTAA") {
-            count++
-        }
-    }
-    if (count>30){print $1,$2,$3,count}
-}') > "${nowdic}/telomere/que_telo.txt"
-
-(grep -E 'TTAGGG' "${nowdic}/telomere/que/QUE.trf.bed" | awk '{
-    count = 0  # 重置计数器，以便在处理新的行时重新计数
-    for(j=1; j<=length($16); j++) {
-        if (substr($16, j, 6) == "TTAGGG") {
-            count++
-        }
-    }
-    if (count>30){print $1,$2,$3,count}
-}') >> "${nowdic}/telomere/que_telo.txt"
-Rscript "${tool_path}scripts/telo_process.r" "QUE" "${nowdic}/telomere/que_telo.txt" "${nowdic}/p_c_chrlen1.txt"  "${nowdic}/telomere/end_quetelo.txt" 
-
-fi
-fi
-## -----------------------------step4.Filter
-cd ${nowdic}
 mkdir saffireh1
 chmod +x "${tool_path}scripts/one2multi_filter.py"
-
-#hm_prihap1.paf为que ref
 python "${tool_path}scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap1.paf -1 6 -2 1 \
 	| rustybam trim-paf \
 	| rustybam break-paf --max-size 5000 \
 	| rustybam filter --paired-len 100000 \
 	| awk '$10 >= 20000' \
 	> hm_prihap1.flt.paf
-#hm_prihap1.flt为que ref
 
-Rscript "${tool_path}scripts/chaos_filt.r"  "${nowdic}/p_c_chrlen1.txt" "${nowdic}/saffireh1/" "${nowdic}/hm_prihap1.flt.paf" "${nowdic}/afterchaos_hap1.flt.paf"  500000 300000
-## 比对结果空白较多，比如machaque。希望能把聚类参数调大一点
-
-## 两个参数，第一个参数越小越严格 第二个参数为希望删掉的比对长度，越大越严格
-#R的输入为que ref，在转saffire的时候其中的函数进行了替换
-## afterchaos_hap1.flt.paf用于在和syri的比较中输入为minimap（query ref），下一步生成的hp.syntenic_blocks.tsv为开始计算SDR
+Rscript "${tool_path}scripts/chaos_filt.r"  "${nowdic}/p_c_chrlen1.txt" "${nowdic}/saffireh1/" "${nowdic}/hm_prihap1.flt.paf" "${nowdic}/afterchaos_hap1.flt.paf"  200000 200000
 awk 'BEGIN{OFS="\t"}{print $6, $8, $9, ($8+$9)/2, $1, $3, $4, ($3+$4)/2, $5}' "${nowdic}/afterchaos_hap1.flt.paf"  |sort -k1,1 -k2,2n > "${nowdic}/h1syntenic_blocks.tsv"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###
 cd ${nowdic}
-mkdir saffireh1
+mkdir saffireh2
 chmod +x "${tool_path}scripts/one2multi_filter.py"
-
-#hm_prihap1.paf为que ref
-python "${tool_path}scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap1.paf -1 6 -2 1 \
+python "${tool_path}scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap2.paf -1 6 -2 1 \
 	| rustybam trim-paf \
 	| rustybam break-paf --max-size 5000 \
 	| rustybam filter --paired-len 100000 \
 	| awk '$10 >= 20000' \
-	> hm_prihap1.flt.paf
-#hm_prihap1.flt为que ref
-if [ ! -d "${nowdic}/genomedata" ]; then
-	mkdir "${nowdic}/genomedata" && cd "${nowdic}/genomedata"
-	fi
+	> hm_prihap2.flt.paf
 
-less -SH hm_prihap1.flt.paf | awk '{print $1}' | uniq | grep '-' | awk -F '-' '{print $1}' | sort | uniq > set1.txt
-less -SH hm_prihap1.flt.paf | awk '{print $1}' | uniq | grep '+' | awk -F '+' '{print $1}' | sort | uniq > set2.txt
-comm -12 set1.txt set2.txt | while read i; do
-    awk -v val="$i" '$1 == val"-" { orig=$3; $1=val"+"; $3=$2-$4; $4=$2-orig; $5=($5=="+") ?"-" : "+"; } 1' hm_prihap1.flt.paf | less -SH
-done >hm_prihap1.flta.paf
+Rscript "${tool_path}scripts/chaos_filt.r"  "${nowdic}/p_c_chrlen2.txt" "${nowdic}/saffireh2/" "${nowdic}/hm_prihap2.flt.paf" "${nowdic}/afterchaos_hap2.flt.paf"  200000 200000
+awk 'BEGIN{OFS="\t"}{print $6, $8, $9, ($8+$9)/2, $1, $3, $4, ($3+$4)/2, $5}' "${nowdic}/afterchaos_hap2.flt.paf"  |sort -k1,1 -k2,2n > "${nowdic}/h2syntenic_blocks.tsv"
 
-less -SH hm_prihap1.flta.paf |awk '{print$1}' |uniq |grep '-'| awk -F '-' '{print$1}'|sort|uniq|less|while read i; do samtools faidx ${hap1_path} $i >> ./genomedata/aa.fa; done
-seqkit seq  -r -p ./genomedata/aa.fa >./genomedata/query_h1.fa
-less -SH hm_prihap1.flta.paf |awk '{print$1}' |uniq |grep '+'| awk -F '+' '{print$1}'|sort|uniq|less|while read i; do samtools faidx ${hap1_path} $i >> ./genomedata/query_h1.fa; done
-## 由于原始序列可能大部分为负链，借用saffire中的orient参数得到大部分对应负链的query染色体，并将query原始序列反向互补
-rm ./genomedata/aa.fa
-less hm_prihap1.flta.paf |awk 'gsub(/[-+]/,"",$1)'>Rinput_h1.paf
-Rscript "${tool_path}scripts/chaos_filt.r"  "${nowdic}/p_c_chrlen1.txt" "${nowdic}/saffireh1/" "${nowdic}/Rinput_h1.paf" "${nowdic}/afterchaos_hap1.flt.paf"  400000 300000
-## 比对结果空白较多，比如machaque。希望能把聚类参数调大一点
+python "${tool_path}scripts/CIGAR.py" --p 30 --r $ref_path --q $hap1_path --paf "${nowdic}/afterchaos_38_002ma.filt.paf" --o "${nowdic}/macigar.txt"
+python "${tool_path}scripts/CIGAR.py" --p 30 --r $ref_path --q $hap2_path --paf "${nowdic}/afterchaos_38_002pa.filt.paf" --o "${nowdic}/pacigar.txt"
 
-## 两个参数，第一个参数越小越严格 第二个参数为希望删掉的比对长度，越大越严格
-#R的输入为que ref，在转saffire的时候其中的函数进行了替换
-## afterchaos_hap1.flt.paf用于在和syri的比较中输入为minimap（query ref），下一步生成的hp.syntenic_blocks.tsv为开始计算SDR
-rm hm_prihap1.flt.paf
-awk 'BEGIN{OFS="\t"}{print $6, $8, $9, ($8+$9)/2, $1, $3, $4, ($3+$4)/2, $5}' "${nowdic}/afterchaos_hap1.flt.paf"  |sort -k1,1 -k2,2n > "${nowdic}/h1syntenic_blocks.tsv"
 
-#----
+# SV
+mkdir denSDRhap1
+Rscript "${tool_path}scripts/denSDR.r"  "${tool_path}scripts/denSDRfun.r" "${nowdic}/masyntenic_blocks.tsv" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/denSDRhap1/"
+mkdir denSDRhap2
+Rscript "${tool_path}scripts/denSDR.r"  "${tool_path}scripts/denSDRfun.r" "${nowdic}/pasyntenic_blocks.tsv" "${nowdic}/p_c_chrlen2.txt" "${nowdic}/denSDRhap2/"
+cat ${nowdic}/denSDRhap2/*end.tsv > "${nowdic}/denSDRhap2/SDRall.txt"
+cat ${nowdic}/denSDRhap1/*end.tsv > "${nowdic}/denSDRhap1/SDRall.txt"
+## 2vcf
+#bash "${tool_path}scripts/cigar2vcf.sh" "${nowdic}/macigar.txt" "${nowdic}/macigarsdr.vcf" "${nowdic}/denSDRhap1/SDRall.txt" $ref_path $hap1_path "${nowdic}/macigarsdr.txt" "${tool_path}scripts/SDR_vcf.py" "4.2.1"  ## 4.2.1 /0.6
+#bash "${tool_path}scripts/cigar2vcf.sh" "${nowdic}/pacigar.txt" "${nowdic}/pacigarsdr.vcf" "${nowdic}/denSDRhap2/SDRall.txt" $ref_path $hap2_path "${nowdic}/pacigarsdr.txt" "${tool_path}scripts/SDR_vcf.py" "4.2.1"    ## 4.2.1 /0.6
+
+# new38cigarma="/home/jmhan/SDR/HG002/integrate/our/vcfsplit/compare_addcen/dupcorrect/38/ma/38_002_macigiarout.txt"
+
+# new38cigarpa="/home/jmhan/SDR/HG002/integrate/our/vcfsplit/compare_addcen/dupcorrect/38/pa/38_002_pacigiarout.txt"
+
+# new37cigarma="/home/jmhan/SDR/HG002/integrate/our/vcfsplit/compare_addcen/dupcorrect/19/ma/37_002_macigiarout.txt"
+# new37cigarpa="/home/jmhan/SDR/HG002/integrate/our/vcfsplit/compare_addcen/dupcorrect/19/pa/37_002_pacigiarout.txt"
+
+
+bash "${tool_path}scripts/dup_filt.sh" "${nowdic}/afterchaos_38_002ma.filt.paf"  "${nowdic}/macigar.txt" "${nowdic}/macigarout.txt"  
+bash "${tool_path}scripts/dup_filt.sh" "${nowdic}/afterchaos_38_002pa.filt.paf"  "${nowdic}/pacigar.txt" "${nowdic}/pacigarout.txt"  
+
+bash "${tool_path}scripts/cigar2vcf.sh" "${new38cigarma}" "${nowdic}/macigarsdr.vcf" "${nowdic}/denSDRhap1/SDRall.txt" $ref_path $hap1_path "${nowdic}/macigarsdr.txt" "${tool_path}scripts/SDR_vcf.py" "0.6"  ## 4.2.1 /0.6
+bash "${tool_path}scripts/cigar2vcf.sh" "${new38cigarpa}" "${nowdic}/pacigarsdr.vcf" "${nowdic}/denSDRhap2/SDRall.txt" $ref_path $hap2_path "${nowdic}/pacigarsdr.txt" "${tool_path}scripts/SDR_vcf.py" "0.6"    ## 4.2.1 /0.6
+
+
+## phenotype
+#split
+bash "${tool_path}scripts/splitfile.sh" "${nowdic}/ma" "${nowdic}/macigarsdr.vcf" 
+bash "${tool_path}scripts/splitfile.sh" "${nowdic}/pa" "${nowdic}/pacigarsdr.vcf"
+#integrate
+mkdir integrate && cd  integrate
+bash "${tool_path}scripts/phenotype.sh"
