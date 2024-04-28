@@ -42,7 +42,7 @@
 Download the SDR script through the following steps:
 
 ```shell
-git clone https://github.com/xiaomiyongyuan/SDR.git
+git clone https://github.com/Hanjunmin/LSGvar.git
 ```
 
 Please create a new empty folder to store the run results and navigate into that folder. Copy the `SDR/run.sh` script into this folder.
