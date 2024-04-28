@@ -47,7 +47,7 @@ git clone https://github.com/xiaomiyongyuan/SDR.git
 
 Please create a new empty folder to store the run results and navigate into that folder. Copy the `SDR/run.sh` script into this folder.
 
-Configure `config.json`: To start the run, three essential input files are required :`reference genome`, `aligned genome`, and the `artificial chromosome pairing file` (refer to examples for guidance). Additionally, the `centromere and telomere file` is optional (alignments in this region will be filtered out during structural variation computation)."
+Configure `config.json`: To start the run, three essential input files are required :`reference genome`， `aligned genome`, and the `artificial chromosome pairing file` (refer to examples for guidance). Additionally, the `centromere and telomere file` is optional (alignments in this region will be filtered out during structural variation computation)."
 
 
 
