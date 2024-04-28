@@ -1,0 +1,90 @@
+filein=$1 #pacigar.txt
+fileout=$2
+paste $filein <(awk -F'[:-]' '{printf "%s\t%s\t%s\n", $2, $4, $1}' $filein) > addout.txt
+awk -F'\t' 'NR>=2 {
+    switch($5) {
+        case "SNP_DEL":
+              printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2 - 1, $9 + $2 + $4 - 1, $10 + $3, $10 + $3, $1, $4, $5, $6, $7, $8
+            break
+        case "SNP_INS":
+                printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2 - 1, $9 + $2 - 1, $10 + $3, $10 + $3 + $4 - 1, $1, $4, $5, $6, $7, $8
+            break
+        case "INDEL_DEL":
+            printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2 - 1, $9 + $2 + $4 - 1, $10 + $3, $10 + $3, $1, $4, $5, $6, $7, $8
+            break
+        case "INDEL_INS":
+            printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2 - 1, $9 + $2 - 1, $10 + $3, $10 + $3 + $4 - 1, $1, $4, $5, $6, $7, $8
+            break
+        case "SNP":
+            printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2, $9 + $2 + $4 - 1, $10 + $3, $10 + $3 + $4 - 1, $1, $4, $5, $6, $7, $8
+            break
+    }
+}' addout.txt  > CIGARend.txt
+
+sed -i 's/SNP_DEL/DEL/g' CIGARend.txt
+sed -i 's/INDEL_DEL/DEL/g' CIGARend.txt
+sed -i 's/SNP_INS/INS/g' CIGARend.txt
+sed -i 's/INDEL_INS/INS/g' CIGARend.txt
+rm addout.txt
+
+awk -F'\t' '$8=="SNP"{print$0}' CIGARend.txt >oursnv.txt
+file="oursnv.txt"
+paste ${file} <(awk '{print $1 "-" $2 "-" $8 "-" $9 "-" $10}' ${file}) <(awk -F'\t' '{print "ID=" $1 "-" $2 "-" $8 "-" $9 "-" $10 ";" "SVTYPE=" $8 ";" "TIG_REGION=" $1 ":" $4 "-" $5 ","  $1 ":" $4 "-" $5 ";" "QUERY_STRAND=" $11 ","$11}' ${file}) <(awk -F'\t' '{print "GT" }' ${file}) <(awk -F'\t' '{print "1|0" }' ${file}) >testbe.txt
+#less -S chr1snv.vcf | cut -f 8 | sed 's/;/\t/g' |  cut -f 4 |  grep -n  "-" | less -S
+less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $12,$9,$10,".",".",$13,$14,$15}' >testchr1snvend.txt
+cat /home/jmhan/SDR/HG002/CIGAR/out2vcf/header.txt testchr1snvend.txt >endcigar.vcf
+sed 's/SNP/SNV/g' endcigar.vcf >end2cigar.vcf
+rm endcigar.vcf
+rm testbe.txt
+rm testchr1snvend.txt
+rm oursnv.txt
+
+
+less -S $3 |awk '$7 ~ "DEL" || $7 ~"INS" ||$7 ~"INV"{print $0}' |awk -F'\t' '($9!=0 || $10!=0){print $0}' >SDRend.txt
+sed -i 's\no\+\g' SDRend.txt
+sed -i 's/SDR_INV/INV/g' SDRend.txt
+sed -i 's/SV_INV/INV/g' SDRend.txt
+sed -i 's/SDR_INS/INS/g' SDRend.txt
+sed -i 's/SV_INS/INS/g' SDRend.txt
+sed -i 's/SDR_DEL/DEL/g' SDRend.txt
+sed -i 's/SV_DEL/DEL/g' SDRend.txt
+
+python $7 --r $4 --q $5 --i SDRend.txt --o $6 ##生成了SDR.txt，这是我们的vcf，然后再整合
+##INS
+awk -F'\t' '$8=="INS"{print$0}' CIGARend.txt >ourins.txt
+file="ourins.txt"
+paste ${file} <(awk '{print $1 "-" $2 "-" $8 "-" $7}' ${file}) <(awk -F'\t' '{print "ID=" $1 "-" $2 "-" $8 "-" $7 ";" "SVTYPE=" $8 ";" "SVLEN=" $7 ";"  "TIG_REGION=" $1 ":" $4 "-" $5 ","  $1 ":" $4 "-" $5 ";" "QUERY_STRAND=" $11 ","$11}' ${file}) <(awk -F'\t' '{print "GT" }' ${file}) <(awk -F'\t' '{print "1|0" }' ${file}) >testbe.txt
+less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $12,$9,$10,".",".",$13,$14,$15}' >testchr1insend.txt
+rm ourins.txt
+rm testbe.txt
+cat <(less -S $6 |awk 'index($3, "INS"){print$0}') testchr1insend.txt >ourinsend.txt
+
+
+
+awk -F'\t' '$8=="DEL"{print$0}' CIGARend.txt >ourdel.txt
+file="ourdel.txt"
+paste ${file} <(awk '{print $1 "-" $2 "-" $8 "-" $7}' ${file}) <(awk -F'\t' '{print "ID=" $1 "-" $2 "-" $8 "-" $7 ";" "SVTYPE=" $8 ";" "SVLEN=" "-" $7 ";"  "TIG_REGION=" $1 ":" $4 "-" $5 ","  $1 ":" $4 "-" $5 ";" "QUERY_STRAND=" $11 ","$11}' ${file}) <(awk -F'\t' '{print "GT" }' ${file}) <(awk -F'\t' '{print "1|0" }' ${file}) >testbe.txt
+less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $12,$9,$10,".",".",$13,$14,$15}' >testchr1delend.txt
+rm ourdel.txt
+rm testbe.txt
+cat <(less -S $6 |awk 'index($3, "DEL"){print$0}') testchr1delend.txt >ourdelend.txt
+
+
+
+
+
+cat end2cigar.vcf  ourinsend.txt ourdelend.txt>hg002cigar.vcf
+
+
+mark=$8
+if [ "$mark" = "4.2.1" ]; then
+    cat /home/jmhan/SDR/HG002/header.txt <(less -S hg002cigar.vcf |awk '$1!="chrX" && $1!="chrY"{print $0}' |awk 'NR>=3{print $0}')  >$fileout
+else
+    cat /home/jmhan/SDR/HG002/GRCH37/37header.txt <(less -S hg002cigar.vcf  |awk 'NR>=3{print $0}')  >$fileout
+fi
+
+
+#/home/jmhan/SDR/HG002/header.txt    grch38的
+
+
+## testchr1delend.txt  testchr1insend.txt end2cigar.vcf
