@@ -111,7 +111,8 @@ less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'NM' |awk -v hap=${hap} 'OFS="\
 less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'DUP' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-DUP-"$9,$3,"DUP",$9,hap,"1|.",$4":"$5"-"$6}' |less -S >DUP.bed
 less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'high-dup' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-HighDup",$3,"HighDup",".",hap,"1|.","."}' |less -S >Highdup.bed
 less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'INV' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-INV-"$9,$3,"INV",$9,hap,"1|.",$4":"$5"-"$6}' |less -S >INV.bed
-cat <(echo -e "#CHROM\tPOS\tID\tEND\tSVTYPE\tSVLEN\tHAP\tGT\t") SNV.bed INS.bed DEL.bed TRANS.bed  SDR.bed DUP.bed Highdup.bed INV.bed  >LSGvar.bed
+less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'COMPLEX' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-COMPLEX-"$9,$3,"COMPLEX",$9,hap,"1|.",$4":"$5"-"$6}' |less -S >complex.bed
+cat <(echo -e "#CHROM\tPOS\tID\tEND\tSVTYPE\tSVLEN\tHAP\tGT\t") SNV.bed INS.bed DEL.bed TRANS.bed  SDR.bed DUP.bed Highdup.bed INV.bed  complex.bed >LSGvar.bed
 less -S LSGvar.bed |awk 'OFS="\t"{print $1,$2,$4,$3,$5,$6,$7,$8}' >LSGvarend.bed
 
 
