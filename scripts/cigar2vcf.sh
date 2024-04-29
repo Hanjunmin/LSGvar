@@ -101,6 +101,19 @@ cat <(less -S $6 |awk 'index($3, "DEL"){print$0}') testchr1delend.txt >ourdelend
 
 cat end2cigar.vcf  ourinsend.txt ourdelend.txt>hg002cigar.vcf
 cat vcf_header.txt <(less -S hg002cigar.vcf)  >$fileout
+hap=$(basename "${nowdic}/h1cigarout.txt"  |cut -c 1-2)
+
+paste  <(less -S hg002cigar.vcf |grep 'SNV' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$3,$2+1,"SNV",1,hap,"1|."}' |less -S)    <(less -S hg002cigar.vcf |grep 'SNV' |awk -F'TIG_REGION=' '{print $2}' |less -S |awk -F',' '{print $1}') >SNV.bed
+paste <(less -S hg002cigar.vcf |grep 'INS' |awk  -v hap=${hap} 'OFS="\t"{print $1,$2,$3}')  <(less -S hg002cigar.vcf |grep 'INS' |awk -F'[-\t]' -v hap=${hap} 'OFS="\t"{print $2+1,"INS",$6,hap,"1|."}' |less -S)    <(less -S hg002cigar.vcf |grep 'INS'|awk -F'TIG_REGION=' '{print $2}' |less -S |awk -F',' '{print $1}') >INS.bed
+paste <(less -S hg002cigar.vcf |grep 'DEL' |awk  -v hap=${hap} 'OFS="\t"{print $1,$2,$3}') <(less -S hg002cigar.vcf |grep 'DEL' |awk -F'[-\t]' -v hap=${hap} 'OFS="\t"{print $2+$6,"DEL",$6,hap,"1|."}' |less -S)    <(less -S hg002cigar.vcf|grep 'DEL'  |awk -F'TIG_REGION=' '{print $2}' |less -S |awk -F',' '{print $1}') >DEL.bed
+less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'TRANS' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-TRANS-"$9,$3,"TRANS",$9,hap,"1|.",$4":"$5"-"$6}' |less -S >TRANS.bed
+less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'NM' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-SDR-"$9,$3,"SDR",$9,hap,"1|.",$4":"$5"-"$6}' |less -S >SDR.bed
+less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'DUP' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-DUP-"$9,$3,"DUP",$9,hap,"1|.",$4":"$5"-"$6}' |less -S >DUP.bed
+less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'high-dup' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-HighDup",$3,"HighDup",".",hap,"1|.","."}' |less -S >Highdup.bed
+less -S "${nowdic}/denSDRhap1/SDRall.txt"  |grep 'INV' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-INV-"$9,$3,"INV",$9,hap,"1|.",$4":"$5"-"$6}' |less -S >INV.bed
+cat <(echo -e "#CHROM\tPOS\tID\tEND\tSVTYPE\tSVLEN\tHAP\tGT\t") SNV.bed INS.bed DEL.bed TRANS.bed  SDR.bed DUP.bed Highdup.bed INV.bed  >LSGvar.bed
+less -S LSGvar.bed |awk 'OFS="\t"{print $1,$2,$4,$3,$5,$6,$7,$8}' >LSGvarend.bed
+
 
 # mark=$8
 # if [ "$mark" = "4.2.1" ]; then
