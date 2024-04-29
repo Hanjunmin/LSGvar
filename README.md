@@ -17,6 +17,8 @@
 - **data.table**
 
 - **IRanges**
+- **bedtools**
+- **python(Bio)**
 
 ## WorkFlow
 
