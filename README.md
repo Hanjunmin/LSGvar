@@ -55,6 +55,7 @@ Configure `config.json`: To start the run, three essential input files are requi
 tool_path="/home/SDR/"
 ref_path="/home/chm13v2.0.fa"
 hap1_path="/home/query_h1.fa"
+hap2_path="/home/query_h2.fa"    ## or  hap2_path=""
 mappingtsv="/home/SDR/examples/chromosome_mapping.tsv"
 centro="/home/SDR/examples/T2Tdatabase/hm_centroend.tsv"
 telome="/home/SDR/examples/T2Tdatabase/hm_teloend.tsv"
