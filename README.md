@@ -6,7 +6,7 @@
 
 
 
-
+- **R**
 - **minimap2**
 - **rustybam**
 
