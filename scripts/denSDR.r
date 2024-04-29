@@ -636,6 +636,12 @@ if(nrow(highdupall[highdupall$ref_chr!=0,])!=0){
   hidup$querylen=""
   data<-rbind(data,hidup)
 }
+if(nrow(data[data$ref_start==0 & data$ref_end==0,])!=0){
+  data<-data[!(data$ref_start==0 & data$ref_end==0),]
+}
+if(nrow(data[data$query_start==0 & data$query_end==0,])!=0){
+  data<-data[!(data$query_start==0 & data$query_end==0),]
+}
 write.table(data, paste(args[4],chrid,"end.tsv",sep = ""), quote = FALSE, sep = "\t", row.names = FALSE)
 #write.table(minimap, paste("D:/MS/saffire测试/R/minimap/",chrid,"minimap.tsv",sep = ""), quote = FALSE, sep = "\t", row.names = FALSE)
 }
