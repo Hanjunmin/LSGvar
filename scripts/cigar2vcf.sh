@@ -1,3 +1,29 @@
+## header
+rm vcf_header.txt
+touch vcf_header.txt
+echo -e "##fileformat=VCFv4.2" >>vcf_header.txt
+time=$(date +'%Y%m%d')
+echo -e "##fileDate=${time}" >>vcf_header.txt
+echo -e "##source=LSGvar" >>vcf_header.txt
+echo -e "#reference=file:$4" >>vcf_header.txt
+while IFS= read -r line; do
+    contigname=$(echo "$line" |cut -f1)
+    contiglen=$(echo "$line" |cut -f2)
+    echo -e "##contig=<ID=${contigname},length=${contiglen}>" >>vcf_header.txt
+done < "${4}.fai"
+echo -e "##INFO=<ID=ID,Number=1,Type=String,Description="Variant ID">" >>vcf_header.txt
+echo -e "##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Variant type">" >>vcf_header.txt
+echo -e "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Variant length">" >>vcf_header.txt
+echo -e "##INFO=<ID=TIG_REGION,Number=.,Type=String,Description="Contig region where variant was found \(one per alt with h1 before h2 for homozygous calls\)">" >>vcf_header.txt
+echo -e "##INFO=<ID=QUERY_STRAND,Number=.,Type=String,Description="Strand of variant in the contig relative to the reference \(order follows TIG_REGION\)">" >>vcf_header.txt
+echo -e "##INFO=<ID=INNER_REF,Number=.,Type=String,Description="Inversion inner breakpoint in reference coordinates \(order follows TIG_REGION\)">" >>vcf_header.txt
+echo -e "##INFO=<ID=INNER_TIG,Number=.,Type=String,Description="Inversion inner breakpoint in contig coordinates \(order follows TIG_REGION\)">" >>vcf_header.txt
+echo -e "##INFO=<ID=HOM_REF,Number=.,Type=String,Description="Perfect breakpoint homology \(SV sequence vs reference\). Format 'X,Y' where X homology upstream, and Y is homology downstream. Homology vs reference is often better for DEL.">" >>vcf_header.txt
+echo -e "##INFO=<ID=HOM_TIG,Number=.,Type=String,Description="Perfect breakpoint homology \(SV sequence vs contig\). Format 'X,Y' where X homology upstream, and Y is homology downstream.  Homology vs contig is often better for INS.">" >>vcf_header.txt
+echo -e "##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">" >>vcf_header.txt
+echo -e "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample" >>vcf_header.txt
+    
+##
 filein=$1 #pacigar.txt
 fileout=$2
 paste $filein <(awk -F'[:-]' '{printf "%s\t%s\t%s\n", $2, $4, $1}' $filein) > addout.txt
@@ -32,7 +58,7 @@ file="oursnv.txt"
 paste ${file} <(awk '{print $1 "-" $2 "-" $8 "-" $9 "-" $10}' ${file}) <(awk -F'\t' '{print "ID=" $1 "-" $2 "-" $8 "-" $9 "-" $10 ";" "SVTYPE=" $8 ";" "TIG_REGION=" $1 ":" $4 "-" $5 ","  $1 ":" $4 "-" $5 ";" "QUERY_STRAND=" $11 ","$11}' ${file}) <(awk -F'\t' '{print "GT" }' ${file}) <(awk -F'\t' '{print "1|0" }' ${file}) >testbe.txt
 #less -S chr1snv.vcf | cut -f 8 | sed 's/;/\t/g' |  cut -f 4 |  grep -n  "-" | less -S
 less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $12,$9,$10,".",".",$13,$14,$15}' >testchr1snvend.txt
-cat /home/jmhan/SDR/HG002/CIGAR/out2vcf/header.txt testchr1snvend.txt >endcigar.vcf
+cat testchr1snvend.txt >endcigar.vcf
 sed 's/SNP/SNV/g' endcigar.vcf >end2cigar.vcf
 rm endcigar.vcf
 rm testbe.txt
@@ -74,14 +100,14 @@ cat <(less -S $6 |awk 'index($3, "DEL"){print$0}') testchr1delend.txt >ourdelend
 
 
 cat end2cigar.vcf  ourinsend.txt ourdelend.txt>hg002cigar.vcf
+cat vcf_header.txt <(less -S hg002cigar.vcf)  >$fileout
 
-
-mark=$8
-if [ "$mark" = "4.2.1" ]; then
-    cat /home/jmhan/SDR/HG002/header.txt <(less -S hg002cigar.vcf |awk '$1!="chrX" && $1!="chrY"{print $0}' |awk 'NR>=3{print $0}')  >$fileout
-else
-    cat /home/jmhan/SDR/HG002/GRCH37/37header.txt <(less -S hg002cigar.vcf  |awk 'NR>=3{print $0}')  >$fileout
-fi
+# mark=$8
+# if [ "$mark" = "4.2.1" ]; then
+#     cat /home/jmhan/SDR/HG002/header.txt <(less -S hg002cigar.vcf |awk '$1!="chrX" && $1!="chrY"{print $0}' |awk 'NR>=3{print $0}')  >$fileout
+# else
+#     cat /home/jmhan/SDR/HG002/GRCH37/37header.txt <(less -S hg002cigar.vcf  |awk 'NR>=3{print $0}')  >$fileout
+# fi
 
 
 #/home/jmhan/SDR/HG002/header.txt    grch38的
