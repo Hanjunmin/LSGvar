@@ -7,7 +7,10 @@
 
 environment.yml
 + R4.2.1 (IRanges, dbscan, data.table, dplyr)
-
++ bedtools
++ minimap2
++ rustybam
++ Python (Bio, subprocess, multiprocessing)
 
 ## WorkFlow
 
