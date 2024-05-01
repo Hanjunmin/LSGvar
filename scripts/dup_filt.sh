@@ -46,8 +46,15 @@ fi
 fi
 fi
 done
-awk 'NR==FNR{seq[$1]; next} !($1 in seq)' del.txt cigartestin.txt |awk 'OFS=FS="\t"{print $2,$3,$4,$5,$6,$7,$8,$9}'  > $out
-rm cigartestin.txt && rm refpaf.region && rm 
+
+if [ -s del.txt ]; then
+    awk 'NR==FNR{seq[$1]; next} !($1 in seq)' del.txt cigartestin.txt |awk 'OFS=FS="\t"{print $2,$3,$4,$5,$6,$7,$8,$9}'  > $out
+else
+    cat cigartestin.txt |awk 'OFS=FS="\t"{print $2,$3,$4,$5,$6,$7,$8,$9}'  > $out
+fi
+
+
+rm cigartestin.txt && rm refpaf.region
 
 ## test
 # less -S mergedup.txt | less -S | while read -r line; do
