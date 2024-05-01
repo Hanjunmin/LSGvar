@@ -32,8 +32,6 @@ refsequences = {record.id: record.seq for record in SeqIO.parse('ref.fa', 'fasta
 querysequences = {record.id: record.seq for record in SeqIO.parse('que.fa', 'fasta')}
 
 
-
-
 def process_line(line):
 	columns = line.split('\t')
 	minus = columns[4]  ## 判断正负链
@@ -128,6 +126,10 @@ def process_line(line):
 				result_lines.append(f"{id}\t{ref_posf+1}\t{query_posf+1}\t1\tSNP\t{ref_strseq}\t{que_strseq}\t{minus}\n")		
 			j=j+1
 
+	with open("temp/"+ref_chr+":"+ref_start+"-"+ref_end+"_"+query_chr+":"+query_start+"-"+query_end+".cigar", 'w') as outfile:
+		for line in result_lines:
+			outfile.write(line)
+	print("yes")
 	return result_lines	
 
 	
@@ -138,9 +140,6 @@ with open(paf, 'r') as infile, open(args.o, 'w') as outfile:
 	with Pool(processes=int(args.p)) as pool:
 		## 之前是30
 		results = pool.map(process_line, infile)
-	for result_lines in results:
-		for line in result_lines:
-			write = outfile.write(line)
 	b=time.time()
 	print((a-b)/60)
 
