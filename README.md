@@ -5,20 +5,7 @@
 ### Dependencies
 
 
-
-- **R4.2.1(dbscan dplyr)**
-- **minimap2**
-- **rustybam**
-
-- **dbscan**
-
-- **dplyr**
-
-- **data.table**
-
-- **IRanges**
-- **bedtools**
-- **python(Bio)**
+environment.yml
 
 ## WorkFlow
 
