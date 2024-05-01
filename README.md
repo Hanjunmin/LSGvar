@@ -34,20 +34,20 @@ Download the SDR script through the following steps:
 git clone https://github.com/Hanjunmin/LSGvar.git
 ```
 
-Please create a new empty folder to store the run results and navigate into that folder. Copy the `SDR/run.sh` script into this folder.
+Please create a new empty folder to store the run results and navigate into that folder. Copy the `LSGvar/run.sh` script into this folder.
 
 Configure `config.json`: To start the run, three essential input files are required :`reference genome`， `aligned genome`, and the `artificial chromosome pairing file` (refer to examples for guidance). Additionally, the `centromere and telomere file` is optional (alignments in this region will be filtered out during structural variation computation)."
 
 
 
 ```shell
-tool_path="/home/SDR/"
+tool_path="/home/LSGvar/"
 ref_path="/home/chm13v2.0.fa"
 hap1_path="/home/query_h1.fa"
 hap2_path="/home/query_h2.fa"    ## or  hap2_path=""
-mappingtsv="/home/SDR/examples/chromosome_mapping.tsv"
-centro="/home/SDR/examples/T2Tdatabase/hm_centroend.tsv"
-telome="/home/SDR/examples/T2Tdatabase/hm_teloend.tsv"
+mappingtsv="/home/LSGvar/examples/chromosome_mapping.tsv"
+centro="/home/LSGvar/examples/T2Tdatabase/hm_centroend.tsv"
+telome="/home/LSGvar/examples/T2Tdatabase/hm_teloend.tsv"
 ```
 
 Run the shell script(The current initial version of the code has not been updated to the Snakemake workflow yet.)
@@ -63,14 +63,20 @@ Explanation for the following three parameters: The first two parameters are fil
 
 ### SV-annotation：
 
-The final result can be found in `/result/end.txt`.
+The final result can be found in `/results`.
 
-|                   | SV-annotation                                                |
+**LSGvarend.bed**:
+
+|Label     |annotation                                                |
 | ----------------- | ------------------------------------------------------------ |
-| SV_(length<10k)   | DEL(deletion)、INS(insertion)、DUP(duplication)、TRANS(translocation)、INV(inversion)、NM(no-matched) |
-| SDR_(length>=10k) | DEL(deletion)、INS(insertion)、DUP(duplication)、TRANS(translocation)、INV(inversion)、NM(no-matched) |
-| COMPLEX           | complex regions                                              |
+| SNV  | SNV |
+| DEL          | Deletion (<50bp、>=50bp)                                              |
+| INS           | Insertion (<50bp、>=50bp)                                                |
+| DUP           | Duplication                                              |
+| INV           | Inversion                                              |
+| SDR           | Structure Divergent Reigions                                         |
+| COMPLEX           | Complex regions                                              |
 
-
-
+**h*cigarsdr.vcf**:
+INS、DEL、SNV
 ( The initial version may still have a few small issues, for reference.)
