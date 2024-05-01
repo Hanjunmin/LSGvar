@@ -58,11 +58,11 @@ fi
 
 ##-------------------------------------------------------------------------- step4.CIGAR--------------------------------------------------------
 mkdir temp
-python "${tool_path}scripts/CIGAR.py" --p 30 --r $ref_path --q $hap1_path --paf "${nowdic}/afterchaos_hap1.flt.paf" --o "${nowdic}/h1cigar.txt"
+python "${tool_path}scripts/CIGAR.py" --p $4 --r $ref_path --q $hap1_path --paf "${nowdic}/afterchaos_hap1.flt.paf" --o "${nowdic}/h1cigar.txt"
 cat "${nowdic}/h1cigar.txt" temp/*.cigar >"${nowdic}/h1cigarend.txt"
 rm temp/*.cigar
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-python "${tool_path}scripts/CIGAR.py" --p 30 --r $ref_path --q $hap2_path --paf "${nowdic}/afterchaos_hap2.flt.paf" --o "${nowdic}/h2cigar.txt"
+python "${tool_path}scripts/CIGAR.py" --p $4 --r $ref_path --q $hap2_path --paf "${nowdic}/afterchaos_hap2.flt.paf" --o "${nowdic}/h2cigar.txt"
 cat  "${nowdic}/h2cigar.txt" temp/*.cigar >"${nowdic}/h2cigarend.txt"
 rm temp/*.cigar
 fi
