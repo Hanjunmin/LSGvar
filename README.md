@@ -77,8 +77,8 @@ The final result can be found in `/results`.
 |Label     |annotation                                                |
 | ----------------- | ------------------------------------------------------------ |
 | SNV  | SNV |
-| DEL          | Deletion (<50bp、>=50bp)                                              |
-| INS           | Insertion (<50bp、>=50bp)                                                |
+| DEL          | Deletion (<50bp, >=50bp)                                              |
+| INS           | Insertion (<50bp, >=50bp)                                                |
 | DUP           | Duplication                                              |
 | INV           | Inversion                                              |
 | SDR           | Structure Divergent Reigions                                         |
