@@ -6,6 +6,8 @@
 
 
 environment.yml
++ R4.2.1 (IRanges, dbscan, data.table, dplyr)
+
 
 ## WorkFlow
 
