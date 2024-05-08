@@ -3,8 +3,8 @@ nowdic=$(pwd)
 
 ##-------------------------------------------------------- step1.minimap---------------------------------------------------------
 minimap2 -t 12 -cx asm20 --secondary=no --eqx -Y -K 8G -s 1000 $ref_path $hap1_path  -o hm_prihap1.paf
-python "${tool_path}scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap1.paf -1 6 -2 1 |awk '{print $6,$7,$1,$2}' >p_c_chrlen1.txt
-python "${tool_path}scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap1.paf -1 6 -2 1 > hm_prihap1.flt.paf
+python "${tool_path}/scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap1.paf -1 6 -2 1 |awk '{print $6,$7,$1,$2}' >p_c_chrlen1.txt
+python "${tool_path}/scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap1.paf -1 6 -2 1 > hm_prihap1.flt.paf
 
 
 ##---------------------------------------------------------- step2.Filter----------------------------------------------------------
@@ -12,9 +12,9 @@ if [ ! -d "${nowdic}/saffireh1" ]; then
 	mkdir "${nowdic}/saffireh1"
 fi
 if [ "$3" = "ctn" ]; then
-    Rscript "${tool_path}scripts/chaos_filt.r" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/saffireh1/" "${nowdic}/hm_prihap1.flt.paf" "${nowdic}/afterchaos_hap1.flt.paf" $1 $2 $3
+    Rscript "${tool_path}/scripts/chaos_filt.r" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/saffireh1/" "${nowdic}/hm_prihap1.flt.paf" "${nowdic}/afterchaos_hap1.flt.paf" $1 $2 $3
 elif [ "$3" = "cts" ]; then
-    Rscript "${tool_path}scripts/chaos_filt.r" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/saffireh1/" "${nowdic}/hm_prihap1.flt.paf" "${nowdic}/afterchaos_hap1.flt.paf" $1 $2 $3 ${centro} ${telome}
+    Rscript "${tool_path}/scripts/chaos_filt.r" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/saffireh1/" "${nowdic}/hm_prihap1.flt.paf" "${nowdic}/afterchaos_hap1.flt.paf" $1 $2 $3 ${centro} ${telome}
 else
     echo "please input ctn/cts parameter"
 fi
@@ -23,8 +23,8 @@ awk 'BEGIN{OFS="\t"}{print $6, $8, $9, ($8+$9)/2, $1, $3, $4, ($3+$4)/2, $5}' "$
 ##------------------------------------------------------------ step3.Another haplotype?----------------------------------------------------
 if [ -n "$hap2_path" ]; then  ## two haplotypes
     minimap2 -t 12 -cx asm20 --secondary=no --eqx -Y -K 8G -s 1000 $ref_path $hap2_path  -o hm_prihap2.paf
-	python "${tool_path}scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap2.paf -1 6 -2 1 |awk '{print $6,$7,$1,$2}' >p_c_chrlen2.txt
-	python "${tool_path}scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap2.paf -1 6 -2 1 \
+	python "${tool_path}/scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap2.paf -1 6 -2 1 |awk '{print $6,$7,$1,$2}' >p_c_chrlen2.txt
+	python "${tool_path}/scripts/one2multi_filter.py" -m ${mappingtsv} -f  hm_prihap2.paf -1 6 -2 1 \
 	| rustybam trim-paf \
 	| rustybam break-paf --max-size 5000 \
 	| rustybam filter --paired-len 100000 \
@@ -34,9 +34,9 @@ if [ -n "$hap2_path" ]; then  ## two haplotypes
 		mkdir "${nowdic}/saffireh2"
 	fi
 	if [ "$3" = "ctn" ]; then
-	    Rscript "${tool_path}scripts/chaos_filt.r" "${nowdic}p_c_chrlen2.txt" "${nowdic}/saffireh2/" "${nowdic}hm_prihap2.flt.paf" "${nowdic}/afterchaos_hap2.flt.paf" $1 $2 $3
+	    Rscript "${tool_path}/scripts/chaos_filt.r" "${nowdic}p_c_chrlen2.txt" "${nowdic}/saffireh2/" "${nowdic}hm_prihap2.flt.paf" "${nowdic}/afterchaos_hap2.flt.paf" $1 $2 $3
 	elif [ "$3" = "cts" ]; then
-	    Rscript "${tool_path}scripts/chaos_filt.r" "${nowdic}p_c_chrlen2.txt" "${nowdic}/saffireh2/" "${nowdic}hm_prihap2.flt.paf" "${nowdic}/afterchaos_hap2.flt.paf" $1 $2 $3 ${centro} ${telome}
+	    Rscript "${tool_path}/scripts/chaos_filt.r" "${nowdic}p_c_chrlen2.txt" "${nowdic}/saffireh2/" "${nowdic}hm_prihap2.flt.paf" "${nowdic}/afterchaos_hap2.flt.paf" $1 $2 $3 ${centro} ${telome}
 	else
 	    echo "please input ctn/cts parameter"
 	fi
@@ -47,52 +47,52 @@ fi
 
 ##------------------------------------------------------------------ step3.Cluster and call SV------------------------------------------------
 mkdir denSDRhap1
-Rscript "${tool_path}scripts/denSDR.r"  "${tool_path}scripts/denSDRfun.r" "${nowdic}/h1syntenic_blocks.tsv" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/denSDRhap1/"
+Rscript "${tool_path}/scripts/denSDR.r"  "${tool_path}scripts/denSDRfun.r" "${nowdic}/h1syntenic_blocks.tsv" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/denSDRhap1/"
 cat ${nowdic}/denSDRhap1/*end.tsv > "${nowdic}/denSDRhap1/SDRall.txt"
 
 if [ -n "$hap2_path" ]; then  ## two haplotypes
 mkdir denSDRhap2
-Rscript "${tool_path}scripts/denSDR.r"  "${tool_path}scripts/denSDRfun.r" "${nowdic}/h2syntenic_blocks.tsv" "${nowdic}/p_c_chrlen2.txt" "${nowdic}/denSDRhap2/"
+Rscript "${tool_path}/scripts/denSDR.r"  "${tool_path}scripts/denSDRfun.r" "${nowdic}/h2syntenic_blocks.tsv" "${nowdic}/p_c_chrlen2.txt" "${nowdic}/denSDRhap2/"
 cat ${nowdic}/denSDRhap2/*end.tsv > "${nowdic}/denSDRhap2/SDRall.txt"
 fi
 
 ##-------------------------------------------------------------------------- step4.CIGAR--------------------------------------------------------
 mkdir temp
-python "${tool_path}scripts/CIGAR.py" --p $4 --r $ref_path --q $hap1_path --paf "${nowdic}/afterchaos_hap1.flt.paf" --o "${nowdic}/h1cigar.txt"
+python "${tool_path}/scripts/CIGAR.py" --p $4 --r $ref_path --q $hap1_path --paf "${nowdic}/afterchaos_hap1.flt.paf" --o "${nowdic}/h1cigar.txt"
 cat "${nowdic}/h1cigar.txt" temp/*.cigar >"${nowdic}/h1cigarend.txt"
 rm temp/*.cigar
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-python "${tool_path}scripts/CIGAR.py" --p $4 --r $ref_path --q $hap2_path --paf "${nowdic}/afterchaos_hap2.flt.paf" --o "${nowdic}/h2cigar.txt"
+python "${tool_path}/scripts/CIGAR.py" --p $4 --r $ref_path --q $hap2_path --paf "${nowdic}/afterchaos_hap2.flt.paf" --o "${nowdic}/h2cigar.txt"
 cat  "${nowdic}/h2cigar.txt" temp/*.cigar >"${nowdic}/h2cigarend.txt"
 rm temp/*.cigar
 fi
 
 ##--------------------------------------------------------------------------- step5.dup_filt--------------------------------------------------
-bash "${tool_path}scripts/dup_filt.sh" "${nowdic}/afterchaos_hap1.flt.paf"  "${nowdic}/h1cigarend.txt" "${nowdic}/h1cigarout.txt"  
+bash "${tool_path}/scripts/dup_filt.sh" "${nowdic}/afterchaos_hap1.flt.paf"  "${nowdic}/h1cigarend.txt" "${nowdic}/h1cigarout.txt"  
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-bash "${tool_path}scripts/dup_filt.sh" "${nowdic}/afterchaos_hap2.flt.paf"  "${nowdic}/h2cigarend.txt" "${nowdic}/h2cigarout.txt"  
+bash "${tool_path}/scripts/dup_filt.sh" "${nowdic}/afterchaos_hap2.flt.paf"  "${nowdic}/h2cigarend.txt" "${nowdic}/h2cigarout.txt"  
 fi
 
 ## ------------------------------------------------------------------------step6.SV_INDEL_SNV2vcf---------------------------------------------
 mkdir results
-bash "${tool_path}scripts/cigar2vcf.sh" "${nowdic}/h1cigarout.txt" "${nowdic}/results/h1cigarsdr.vcf" "${nowdic}/denSDRhap1/SDRall.txt" $ref_path $hap1_path "${nowdic}/h1cigarsdr.txt" "${tool_path}scripts/SDR_vcf.py"
+bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h1cigarout.txt" "${nowdic}/results/h1cigarsdr.vcf" "${nowdic}/denSDRhap1/SDRall.txt" $ref_path $hap1_path "${nowdic}/h1cigarsdr.txt" "${tool_path}scripts/SDR_vcf.py"
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-bash "${tool_path}scripts/cigar2vcf.sh" "${nowdic}/h2cigarout.txt" "${nowdic}/results/h2cigarsdr.vcf" "${nowdic}/denSDRhap2/SDRall.txt" $ref_path $hap2_path "${nowdic}/h2cigarsdr.txt" "${tool_path}scripts/SDR_vcf.py"
+bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h2cigarout.txt" "${nowdic}/results/h2cigarsdr.vcf" "${nowdic}/denSDRhap2/SDRall.txt" $ref_path $hap2_path "${nowdic}/h2cigarsdr.txt" "${tool_path}scripts/SDR_vcf.py"
 fi
 ##------------------------------------------------------------------------- step7.split and integrate------------------------------------------
-# bash "${tool_path}scripts/splitfile.sh" "${nowdic}/h1" "${nowdic}/h1cigarsdr.vcf" 
+# bash "${tool_path}/scripts/splitfile.sh" "${nowdic}/h1" "${nowdic}/h1cigarsdr.vcf" 
 # if [ -n "$hap2_path" ]; then  ## two haplotypes
-# bash "${tool_path}scripts/splitfile.sh" "${nowdic}/h2" "${nowdic}/h2cigarsdr.vcf"
+# bash "${tool_path}/scripts/splitfile.sh" "${nowdic}/h2" "${nowdic}/h2cigarsdr.vcf"
 # fi
 
 # ## ----------------------------------------------------------------------------------------------------------
 # mkdir integrate && cd  integrate
-# bash "${tool_path}scripts/phenotype.sh"
+# bash "${tool_path}/scripts/phenotype.sh"
 
 
 # if [ ! -d "${nowdic}/result" ]; then
 # 	mkdir "${nowdic}/result"
 # fi
-# Rscript "${tool_path}scripts/SDR.r" "${tool_path}scripts/SDRfun.r" "${nowdic}/h1syntenic_blocks.tsv" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/result/" 
+# Rscript "${tool_path}/scripts/SDR.r" "${tool_path}scripts/SDRfun.r" "${nowdic}/h1syntenic_blocks.tsv" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/result/" 
 # cd result/
 # cat ./*  |sort -r |uniq >end.txt
