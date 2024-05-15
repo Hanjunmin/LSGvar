@@ -75,9 +75,9 @@ fi
 
 ## ------------------------------------------------------------------------step6.SV_INDEL_SNV2vcf---------------------------------------------
 mkdir results
-bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h1cigarout.txt" "${nowdic}/results/h1cigarsdr.vcf" "${nowdic}/denSDRhap1/SDRall.txt" $ref_path $hap1_path "${nowdic}/h1cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py"
+bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h1cigarout.txt" "${nowdic}/results/h1cigarsdr.vcf" "${nowdic}/denSDRhap1/SDRall.txt" $ref_path $hap1_path "${nowdic}/h1cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py" "${nowdic}/results/LSGvarend1.bed"
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h2cigarout.txt" "${nowdic}/results/h2cigarsdr.vcf" "${nowdic}/denSDRhap2/SDRall.txt" $ref_path $hap2_path "${nowdic}/h2cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py"
+bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h2cigarout.txt" "${nowdic}/results/h2cigarsdr.vcf" "${nowdic}/denSDRhap2/SDRall.txt" $ref_path $hap2_path "${nowdic}/h2cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py" "${nowdic}/results/LSGvarend2.bed"
 fi
 ##------------------------------------------------------------------------- step7.split and integrate------------------------------------------
 # bash "${tool_path}/scripts/splitfile.sh" "${nowdic}/h1" "${nowdic}/h1cigarsdr.vcf" 
