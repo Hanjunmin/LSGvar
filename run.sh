@@ -24,12 +24,7 @@ awk 'BEGIN{OFS="\t"}{print $6, $8, $9, ($8+$9)/2, $1, $3, $4, ($3+$4)/2, $5}' "$
 if [ -n "$hap2_path" ]; then  ## two haplotypes
     minimap2 -t 12 -cx asm20 --secondary=no --eqx -Y -K 8G -s 1000 $ref_path $hap2_path  -o hm_prihap2.paf
 	python "${tool_path}/scripts/one2multi_filter.py" -m ${mappingtsvh2} -f  hm_prihap2.paf -1 6 -2 1 |awk '{print $6,$7,$1,$2}' >p_c_chrlen2.txt
-	python "${tool_path}/scripts/one2multi_filter.py" -m ${mappingtsvh2} -f  hm_prihap2.paf -1 6 -2 1 \
-	| rustybam trim-paf \
-	| rustybam break-paf --max-size 5000 \
-	| rustybam filter --paired-len 100000 \
-	| awk '$10 >= 20000' \
-	> hm_prihap2.flt.paf
+	python "${tool_path}/scripts/one2multi_filter.py" -m ${mappingtsvh2} -f  hm_prihap2.paf -1 6 -2 1  >hm_prihap2.flt.paf
 	if [ ! -d "${nowdic}/saffireh2" ]; then
 		mkdir "${nowdic}/saffireh2"
 	fi
