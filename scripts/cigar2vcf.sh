@@ -110,7 +110,7 @@ less -S $3  |grep 'high-dup' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-H
 less -S $3  |grep 'INV' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-INV-"$9,$3,"INV",$9,hap,"1|.",$4":"$5"-"$6}' |less -S >INV.bed
 less -S $3  |grep 'COMPLEX' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-COMPLEX-"$9,$3,"COMPLEX",$9,hap,"1|.",$4":"$5"-"$6}' |less -S >complex.bed
 cat <(echo -e "#CHROM\tPOS\tID\tEND\tSVTYPE\tSVLEN\tHAP\tGT\tQUERY") SNV.bed INS.bed DEL.bed TRANS.bed  SDR.bed DUP.bed Highdup.bed INV.bed  complex.bed >LSGvar.bed
-less -S LSGvar.bed |awk 'OFS="\t"{print $1,$2,$4,$3,$5,$6,$7,$8,$9}' >results/LSGvarend.bed
+less -S LSGvar.bed |awk 'OFS="\t"{print $1,$2,$4,$3,$5,$6,$7,$8,$9}' > $8
 
 rm SDRend.txt && rm addout.txt && rm *.bed && rm *.vcf && rm CIGARend.txt && rm oursnv.txt
 # mark=$8
