@@ -10,6 +10,7 @@ environment.yml
 + bedtools
 + minimap2
 + rustybam
++ truvari(4.2.1)
 + Python (Bio, subprocess, multiprocessing)
 
 ## WorkFlow
@@ -73,7 +74,7 @@ Explanation for the following three parameters: The first two parameters are fil
 
 The final result can be found in `/results`.
 
-**LSGvarend.bed**:
+**LSGvarend1(2).bed**:
 
 |Label     |annotation                                                |
 | ----------------- | ------------------------------------------------------------ |
@@ -85,9 +86,11 @@ The final result can be found in `/results`.
 | SDR           | Structure Divergent Reigions                                         |
 | COMPLEX           | Complex regions                                              |
 
-**h*cigarsdr.vcf**:
+**h1(h2)cigarsdr.vcf**:
 
-INS、DEL、SNV
+INS、DEL、SNV、INV
 
+**sortLSGvarall.vcf.gz**(h1+h2)
+**LSGvar.bed**(h1+h2)
 
 ( The initial version may still have a few small issues, for reference.)
