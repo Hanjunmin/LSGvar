@@ -1,6 +1,10 @@
 
 # snv
-cd integrate
+less -S $4 |awk 'OFS="\t"{print $1,$3,$4}'|bedtools sort |bedtools merge -i - >h1_paf.bed
+less -S $5 |awk 'OFS="\t"{print $1,$3,$4}'|bedtools sort |bedtools merge -i - >h2_paf.bed
+bedtools intersect -a h1_paf.bed -b h2_paf.bed  |bedtools sort >h1_h2intersec.bed
+
+
 x=$1 #x="/home/jmhan/SDR/HG002/GRCH37/ma"  x="/home/jmhan/SDR/HG002/ma"
 y=$2 #y="/home/jmhan/SDR/HG002/GRCH37/pa"  y="/home/jmhan/SDR/HG002/pa"  
 #ref="/home/jmhan/SDR/genome/GRCh38/GCF_000001405.26_GRCh38_genomic.chrNames.fna"
@@ -19,9 +23,9 @@ awk -F '\t' '{
     } else {
         OFS="\t";  
         if ($10 == "1|0") {
-            $12 = ($11 == "1|0") ? "1|1" : "1|0";
+            $12 = ($11 == "1|0") ? "1|1" : "1|.";
         } else {
-            $12 = "0|1";
+            $12 = ".|1";
         }
         $10 = "";
         $11 = "";
@@ -52,9 +56,9 @@ awk -F '\t' '{
     } else {
         OFS="\t";  
         if ($10 == "1|0") {
-            $12 = ($11 == "1|0") ? "1|1" : "1|0";
+            $12 = ($11 == "1|0") ? "1|1" : "1|.";
         } else {
-            $12 = "0|1";
+            $12 = ".|1";
         }
         $10 = "";
         $11 = "";
@@ -88,9 +92,9 @@ awk -F '\t' '{
     } else {
         OFS="\t";  
         if ($10 == "1|0") {
-            $12 = ($11 == "1|0") ? "1|1" : "1|0";
+            $12 = ($11 == "1|0") ? "1|1" : "1|.";
         } else {
-            $12 = "0|1";
+            $12 = ".|1";
         }
         $10 = "";
         $11 = "";
@@ -107,17 +111,33 @@ bcftools index -t "sort"$file".gz"
 ## integrate
 
 cat <(zcat sortmergesv_end.vcf.gz|awk -F'\t' '{if($0 ~ /^#/){print $0}else{OFS="\t"
-        print $1, $2, $3, $4, $5, $6, $7, ".", $9, $10}}') <(zcat sortmergeindelend.vcf.gz |awk -F'\t' '{if($0 ~ /^#/){next}else{OFS="\t"
-        print $1, $2, $3, $4, $5, $6, $7, ".", $9, $10}}') <(zcat sortmergesnvend.vcf.gz |awk -F'\t' '{if($0 ~ /^#/){next}else{OFS="\t"
-        print $1, $2, $3, $4, $5, $6, $7, ".", $9, $10}}') > Lasv.vcf
-file="Lasv.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
+        print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}}') <(zcat sortmergeindelend.vcf.gz |awk -F'\t' '{if($0 ~ /^#/){next}else{OFS="\t"
+        print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}}') <(zcat sortmergesnvend.vcf.gz |awk -F'\t' '{if($0 ~ /^#/){next}else{OFS="\t"
+        print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}}') > LSGvar.vcf
+file="LSGvar.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
 rm $file".gz"
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
-nohup truvari bench --pctseq 0.6 --pctsize 0.5 -b /home/jmhan/SDR/HG002/genome/hg002sv_12745/sortbenv0.6.vcf.gz -c "sort"$file".gz" --reference $ref --includebed /home/jmhan/SDR/HG002/genome/v0.6consistent.bed -o end &
+#nohup truvari bench --pctseq 0.6 --pctsize 0.5 -b /home/jmhan/SDR/HG002/genome/hg002sv_12745/sortbenv0.6.vcf.gz -c "sort"$file".gz" --reference $ref --includebed /home/jmhan/SDR/HG002/genome/v0.6consistent.bed -o end &
 
 
+gunzip sortLSGvar.vcf.gz
+awk '{print $0 "\t" NR}' sortLSGvar.vcf >sortLSGvar.num.vcf
+bedtools intersect -a sortLSGvar.num.vcf -b h1_h2intersec.bed |uniq > overlapped.vcf
+less -S overlapped.vcf  |awk '{print $11}' |uniq >overlap.num
+end=$(less sortLSGvar.vcf |wc -l)
+seq 1 ${end} >all.num
+sort all.num overlap.num| uniq -u |sort -n >sediff.num
+paste <(less -S  overlapped.vcf |awk 'OFS="\t"{print $1,$2,$3,$4,$5,$6,$7,$8,$9}') <(less -S  overlapped.vcf |cut -f 10 |sed 's/\./0/g') >over.vcf
+awk 'NR==FNR {lines[$1]; next} FNR in lines' sediff.num sortLSGvar.vcf >sed.vcf
+cat sed.vcf over.vcf >LSGvarall.vcf
+file="LSGvarall.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
+rm $file".gz"
+bgzip $file
+bcftools sort $file".gz" -o "sort"$file".gz"
+bcftools index -t "sort"$file".gz"
+cp "sort"$file".gz" ../
 
 
 ## grch38
@@ -136,9 +156,9 @@ nohup truvari bench --pctseq 0.6 --pctsize 0.5 -b /home/jmhan/SDR/HG002/genome/h
 # bcftools sort $file".gz" -o "sort"$file".gz"
 # bcftools index -t "sort"$file".gz"
 #nohup truvari bench -b /home/jmhan/SDR/HG002/genome/hg002sv_12745/sortbenv0.6.vcf.gz -c "sort"$file".gz" --reference /home/jmhan/SDR/HG002/GRCH37/hg19.fasta --includebed /home/jmhan/SDR/HG002/genome/v0.6consistent.bed -o end &
-singularity shell /home/jmhan/singularity/hap.py_latest.sif
+#singularity shell /home/jmhan/singularity/hap.py_latest.sif
 #/opt/hap.py/bin/som.py sorthg002benend.vcf.gz sorthg002benend.vcf.gz -o de -r /home/jmhan/SDR/genome/GRCh38/GCF_000001405.26_GRCh38_genomic.chrNames.fna
-singularity exec /home/jmhan/SDR/HG002/integrate/hap.py/hap.py/hap.py_latest.sif /opt/hap.py/bin/hap.py   hg002_38_splitben.vcf       hg002_38_splitben.vcf      -f /home/jmhan/SDR/HG002/genome/HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed -r  /home/jmhan/SDR/genome/GRCh38/GCF_000001405.26_GRCh38_genomic.chrNames.fna   -o test/test
+#singularity exec /home/jmhan/SDR/HG002/integrate/hap.py/hap.py/hap.py_latest.sif /opt/hap.py/bin/hap.py   hg002_38_splitben.vcf       hg002_38_splitben.vcf      -f /home/jmhan/SDR/HG002/genome/HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed -r  /home/jmhan/SDR/genome/GRCh38/GCF_000001405.26_GRCh38_genomic.chrNames.fna   -o test/test
 
 
 # less -S SV.vcf |awk -F'\t' '{
