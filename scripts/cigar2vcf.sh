@@ -83,7 +83,7 @@ rm testbe.txt
 cat <(less -S $6 |awk 'index($3, "INS"){print$0}') testchr1insend.txt >ourinsend.txt
 
 
-
+##DEL
 awk -F'\t' '$8=="DEL"{print$0}' CIGARend.txt >ourdel.txt
 file="ourdel.txt"
 paste ${file} <(awk '{print $1 "-" $2 "-" $8 "-" $7}' ${file}) <(awk -F'\t' '{print "ID=" $1 "-" $2 "-" $8 "-" $7 ";" "SVTYPE=" $8 ";" "SVLEN=" "-" $7 ";"  "TIG_REGION=" $1 ":" $4 "-" $5 ","  $1 ":" $4 "-" $5 ";" "QUERY_STRAND=" $11 ","$11}' ${file}) <(awk -F'\t' '{print "GT" }' ${file}) <(awk -F'\t' '{print "1|0" }' ${file}) >testbe.txt
@@ -92,13 +92,13 @@ rm ourdel.txt
 rm testbe.txt
 cat <(less -S $6 |awk 'index($3, "DEL"){print$0}') testchr1delend.txt >ourdelend.txt
 
+##INV
+cat <(less -S $6 |awk 'index($3, "INV"){print$0}')  >ourinvend.txt
 
 
-
-
-cat end2cigar.vcf  ourinsend.txt ourdelend.txt>hg002cigar.vcf
+cat end2cigar.vcf  ourinsend.txt ourdelend.txt ourinvend.txt>hg002cigar.vcf
 cat vcf_header.txt <(less -S hg002cigar.vcf)  >$fileout
-hap=$(basename "${nowdic}/h1cigarout.txt"  |cut -c 1-2)
+hap=$(basename "$1"  |cut -c 1-2)
 
 paste  <(less -S hg002cigar.vcf |grep 'SNV' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$3,$2+1,"SNV",1,hap,"1|."}' |less -S)    <(less -S hg002cigar.vcf |grep 'SNV' |awk -F'TIG_REGION=' '{print $2}' |less -S |awk -F',' '{print $1}') >SNV.bed
 paste <(less -S hg002cigar.vcf |grep 'INS' |awk  -v hap=${hap} 'OFS="\t"{print $1,$2,$3}')  <(less -S hg002cigar.vcf |grep 'INS' |awk -F'[-\t]' -v hap=${hap} 'OFS="\t"{print $2+1,"INS",$6,hap,"1|."}' |less -S)    <(less -S hg002cigar.vcf |grep 'INS'|awk -F'TIG_REGION=' '{print $2}' |less -S |awk -F',' '{print $1}') >INS.bed
