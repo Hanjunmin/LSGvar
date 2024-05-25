@@ -20,6 +20,32 @@ paf=args.i
 
 df = pd.read_csv(paf, sep='\t',header=None)
 with open(args.o, 'w') as file:
+	## INV
+	inv_rows = df[df.iloc[:, 6] == 'INV']
+	inv_rows.to_csv('inv.csv', sep='\t', header=None, index=False)
+	subprocess.run(f"awk '{{print $4,$5,$6,\"\",\"\",$8}}' inv.csv|tr ' ' '\t' > query.bed", shell=True)
+	subprocess.run(f"bedtools getfasta -fi {QUERY} -bed query.bed -s -fo que.fa", shell=True)
+	subprocess.run(f"awk '{{print $1,$2,$3}}' inv.csv|tr ' ' '\t'  > ref.bed", shell=True)  ##如果参考基因组对应的是正链不进行反转，如果是负链就进行反转
+	subprocess.run(f"bedtools getfasta -fi {REF} -bed ref.bed -fo ref.fa", shell=True)
+	refsequences = {record.id: record.seq for record in SeqIO.parse('ref.fa', 'fasta')}
+	querysequences = {record.id: record.seq for record in SeqIO.parse('que.fa', 'fasta')}
+	for index, row in inv_rows.iterrows():
+		ref_chr = row[0]
+		ref_start = row[1]
+		ref_end = row[2]
+		que_chr = row[3]
+		que_start = row[4]
+		que_end = row[5]
+		lenall = row[8]
+		minus="-"
+		selected_reffa = str(refsequences[ref_chr+":"+str(ref_start)+"-"+str(ref_end)])
+		selected_quefa = str(querysequences[que_chr+":"+str(que_start)+"-"+str(que_end)+"("+minus+")"])
+		three=ref_chr+"-"+str(ref_start)+"-"+"INV"+"-"+str(lenall)
+		emp="."
+		alllen="ID="+three+";"+"SVTYPE=INV;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+","+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
+		GT="GT"
+		phase="1|0"
+		file.write(f"{ref_chr}\t{ref_start}\t{three}\t{selected_reffa}\t{selected_quefa}\t{emp}\t{emp}\t{alllen}\t{GT}\t{phase}\n")  # 添加换行符，以便每行占一行
 	## INS
 	ins_rows = df[df.iloc[:, 6] == 'INS']
 	ins_rows.to_csv('ins.csv', sep='\t', header=None, index=False)
@@ -42,7 +68,7 @@ with open(args.o, 'w') as file:
 		selected_quefa = str(querysequences[que_chr+":"+str(que_start-1)+"-"+str(que_end)+"("+minus+")"])
 		three=ref_chr+"-"+str(ref_start)+"-"+"INS"+"-"+str(lenall)
 		emp="."
-		alllen=three+";"+"SVTYPE=INS;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+","+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
+		alllen="ID="+three+";"+"SVTYPE=INS;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+","+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
 		GT="GT"
 		phase="1|0"
 		file.write(f"{ref_chr}\t{ref_start}\t{three}\t{selected_reffa}\t{selected_quefa}\t{emp}\t{emp}\t{alllen}\t{GT}\t{phase}\n")  # 添加换行符，以便每行占一行
@@ -68,7 +94,7 @@ with open(args.o, 'w') as file:
 		selected_quefa = str(querysequences[que_chr+":"+str(que_start-1)+"-"+str(que_end)+"("+minus+")"])
 		three=ref_chr+"-"+str(ref_start)+"-"+"DEL"+"-"+str(lenall)
 		emp="."
-		alllen=three+";"+"SVTYPE=DEL;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+","+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
+		alllen="ID="+three+";"+"SVTYPE=DEL;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+","+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
 		GT="GT"
 		phase="1|0"
 		file.write(f"{ref_chr}\t{ref_start}\t{three}\t{selected_reffa}\t{selected_quefa}\t{emp}\t{emp}\t{alllen}\t{GT}\t{phase}\n")  # 添加换行符，以便每行占一行
