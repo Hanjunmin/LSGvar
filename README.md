@@ -91,6 +91,7 @@ The final result can be found in `/results`.
 INS、DEL、SNV、INV
 
 **sortLSGvarall.vcf.gz**(h1+h2)
+
 **LSGvar.bed**(h1+h2)
 
 ( The initial version may still have a few small issues, for reference.)
