@@ -69,8 +69,8 @@ bash "${tool_path}/scripts/dup_filt.sh" "${nowdic}/afterchaos_hap2.flt.paf"  "${
 fi
 
 ## ------------------------------------------------------------------------step6.SV_INDEL_SNV2vcf---------------------------------------------
-if [ ! -d "${nowdic}/result" ]; then
-	mkdir "${nowdic}/result"
+if [ ! -d "${nowdic}/results" ]; then
+	mkdir "${nowdic}/results"
 fi
 bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h1cigarout.txt" "${nowdic}/results/h1cigarsdr.vcf" "${nowdic}/denSDRhap1/SDRall.txt" $ref_path $hap1_path "${nowdic}/h1cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py" "${nowdic}/results/LSGvarend1.bed"
 if [ -n "$hap2_path" ]; then  ## two haplotypes
