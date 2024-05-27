@@ -37,7 +37,7 @@ rm $file".gz"
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
-conda activate truvari4
+#conda activate truvari4
 #nohup truvari bench -s 0  -b /home/jmhan/SDR/HG002/CIGAR/HG002process/sorthg002bensnv.vcf.gz -c sortmergesnvend.vcf.gz --reference $ref --includebed /home/jmhan/SDR/HG002/genome/HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed -o snv  &
 
 
@@ -46,7 +46,7 @@ bcftools merge -m none --force-samples "${x}/sortindel.vcf.gz" "${y}/sortindel.v
 file="mergeindel.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
-truvari collapse -s 0 -S 50 -p 0.7 -P 0.7 -r 10 -i "sort"$file".gz" -o "${file}_merge.vcf" -c "${file}_collapsed.vcf" -f  $ref
+/share/home/zhanglab/user/yangchentao/miniconda3/bin/truvari collapse -s 0 -S 50 -p 0.7 -P 0.7 -r 10 -i "sort"$file".gz" -o "${file}_merge.vcf" -c "${file}_collapsed.vcf" -f  $ref
 awk -F '\t' '{
     if ($0 ~ /^##/) {
         print $0;  # 输出当前行
@@ -81,8 +81,8 @@ bcftools merge -m none --force-samples "${x}/sortSV.vcf.gz" "${y}/sortSV.vcf.gz"
 file="mergeSV.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
-conda activate truvari4
-truvari collapse -i "sort"$file".gz" -o mergesv.vcf -c collapsedsv.vcf -f "/home/jmhan/SDR/HG002/GRCH37/hg19.fasta"
+#conda activate truvari4
+/share/home/zhanglab/user/yangchentao/miniconda3/bin/truvari collapse -i "sort"$file".gz" -o mergesv.vcf -c collapsedsv.vcf -f "/home/jmhan/SDR/HG002/GRCH37/hg19.fasta"
 awk -F '\t' '{
     if ($0 ~ /^##/) {
         print $0;  # 输出当前行
