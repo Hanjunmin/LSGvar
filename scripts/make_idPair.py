@@ -17,7 +17,9 @@ import sys
 
 result = {}
 for line in sys.stdin:
-    ref, qry = line.strip().split()
+    tmp = line.strip().split()
+    if len(tmp) < 2:continue
+    ref, qry = tmp[0], tmp[1]
     if ref not in result:
         result[ref] = [qry,]
     else:
