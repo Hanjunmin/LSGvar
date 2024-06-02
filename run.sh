@@ -41,31 +41,31 @@ fi
 
 
 ##------------------------------------------------------------------ step3.Cluster and call SV------------------------------------------------
-mkdir denSDRhap1
+[ -d denSDRhap1 ] || mkdir denSDRhap1
 Rscript "${tool_path}/scripts/denSDR.r"  "${tool_path}/scripts/denSDRfun.r" "${nowdic}/h1syntenic_blocks.tsv" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/denSDRhap1/"
 cat ${nowdic}/denSDRhap1/*end.tsv > "${nowdic}/denSDRhap1/SDRall.txt"
 
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-mkdir denSDRhap2
+[ -d denSDRhap2 ] || mkdir denSDRhap2
 Rscript "${tool_path}/scripts/denSDR.r"  "${tool_path}/scripts/denSDRfun.r" "${nowdic}/h2syntenic_blocks.tsv" "${nowdic}/p_c_chrlen2.txt" "${nowdic}/denSDRhap2/"
 cat ${nowdic}/denSDRhap2/*end.tsv > "${nowdic}/denSDRhap2/SDRall.txt"
 fi
 
 ##-------------------------------------------------------------------------- step4.CIGAR--------------------------------------------------------
-mkdir temp
+[ -d temp ] || mkdir temp
 python "${tool_path}/scripts/CIGAR.py" --p $4 --r $ref_path --q $hap1_path --paf "${nowdic}/afterchaos_hap1.flt.paf" --o "${nowdic}/h1cigar.txt"
 cat "${nowdic}/h1cigar.txt" temp/*.cigar >"${nowdic}/h1cigarend.txt"
 rm temp/*.cigar
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-python "${tool_path}/scripts/CIGAR.py" --p $4 --r $ref_path --q $hap2_path --paf "${nowdic}/afterchaos_hap2.flt.paf" --o "${nowdic}/h2cigar.txt"
-cat  "${nowdic}/h2cigar.txt" temp/*.cigar >"${nowdic}/h2cigarend.txt"
-rm temp/*.cigar
+	python "${tool_path}/scripts/CIGAR.py" --p $4 --r $ref_path --q $hap2_path --paf "${nowdic}/afterchaos_hap2.flt.paf" --o "${nowdic}/h2cigar.txt"
+	cat  "${nowdic}/h2cigar.txt" temp/*.cigar >"${nowdic}/h2cigarend.txt"
+	rm temp/*.cigar
 fi
 
 ##--------------------------------------------------------------------------- step5.dup_filt--------------------------------------------------
 bash "${tool_path}/scripts/dup_filt.sh" "${nowdic}/afterchaos_hap1.flt.paf"  "${nowdic}/h1cigarend.txt" "${nowdic}/h1cigarout.txt"  
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-bash "${tool_path}/scripts/dup_filt.sh" "${nowdic}/afterchaos_hap2.flt.paf"  "${nowdic}/h2cigarend.txt" "${nowdic}/h2cigarout.txt"  
+	bash "${tool_path}/scripts/dup_filt.sh" "${nowdic}/afterchaos_hap2.flt.paf"  "${nowdic}/h2cigarend.txt" "${nowdic}/h2cigarout.txt"  
 fi
 
 ## ------------------------------------------------------------------------step6.SV_INDEL_SNV2vcf---------------------------------------------
@@ -79,14 +79,15 @@ fi
 ##------------------------------------------------------------------------- step7.split and integrate------------------------------------------
 bash "${tool_path}/scripts/splitfile.sh" "${nowdic}/h1" "${nowdic}/results/h1cigarsdr.vcf" 
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-bash "${tool_path}/scripts/splitfile.sh" "${nowdic}/h2" "${nowdic}/results/h2cigarsdr.vcf"
+	bash "${tool_path}/scripts/splitfile.sh" "${nowdic}/h2" "${nowdic}/results/h2cigarsdr.vcf"
 fi
 
 # ## ----------------------------------------------------------------------------------------------------------
 if [ -n "$hap2_path" ]; then
-mkdir results/integrate && cd  results/integrate
-bash "${tool_path}/scripts/phenotype.sh" "${nowdic}/h1" "${nowdic}/h2" ${ref_path} "${nowdic}/afterchaos_hap1.flt.paf" "${nowdic}/afterchaos_hap2.flt.paf" 
-bash "${tool_path}/scripts/vcf2bedGT.sh" "${nowdic}/results/sortLSGvarall.vcf.gz" "${nowdic}/results/LSGvarend1.bed" "${nowdic}/results/LSGvarend2.bed" "${nowdic}/results/LSGvar.bed"
+	[ -d results/integrate ] || mkdir -p results/integrate 
+	cd  results/integrate
+	bash "${tool_path}/scripts/phenotype.sh" "${nowdic}/h1" "${nowdic}/h2" ${ref_path} "${nowdic}/afterchaos_hap1.flt.paf" "${nowdic}/afterchaos_hap2.flt.paf" 
+	bash "${tool_path}/scripts/vcf2bedGT.sh" "${nowdic}/results/sortLSGvarall.vcf.gz" "${nowdic}/results/LSGvarend1.bed" "${nowdic}/results/LSGvarend2.bed" "${nowdic}/results/LSGvar.bed"
 fi
 
 # if [ ! -d "${nowdic}/result" ]; then

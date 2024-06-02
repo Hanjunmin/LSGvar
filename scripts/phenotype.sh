@@ -82,7 +82,7 @@ file="mergeSV.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
 #conda activate truvari4
-/share/home/zhanglab/user/yangchentao/miniconda3/bin/truvari collapse -i "sort"$file".gz" -o mergesv.vcf -c collapsedsv.vcf -f "/home/jmhan/SDR/HG002/GRCH37/hg19.fasta"
+/share/home/zhanglab/user/yangchentao/miniconda3/bin/truvari collapse -i "sort"$file".gz" -o mergesv.vcf -c collapsedsv.vcf -f $ref
 awk -F '\t' '{
     if ($0 ~ /^##/) {
         print $0;  # 输出当前行
