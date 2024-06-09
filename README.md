@@ -70,6 +70,9 @@ Explanation for the following three parameters: The first two parameters are fil
 
 40 (the number of process in the step of CIGAR calculation)
 
+some other functions:
+If your input FASTA file is at the contig or scaffold level, you can utilize the contig_process.sh script to process the primary FASTA file. The resulting FASTA files will be stored in a directory named '`genomedata`'. Then, you can update your config.json file with the '`hap1_path`'('`hap2_path`') parameter set accordingly.
+
 ### SV-annotation：
 
 The final result can be found in `/results`.
