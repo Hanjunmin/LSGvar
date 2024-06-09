@@ -58,28 +58,13 @@ flit2saffire<-function(pos,name){
 ## cts=TRUE 计算参考基因组的
 ## ctn=TRUE 计算参考基因组的
 cts=TRUE
-cta=FALSE
-ctn=FALSE
 if(cts){  ##只计算参考基因组的
-  ## 端粒
-  result_reftelo<-fread("/home/jmhan/breakpoints/minimap/chimpanzee/telocentrodata/hm_teloend.tsv")
+  result_reftelo<-fread(args[5])
   result_quetelo<-""
-  ## 着丝粒
-  result_refcentr<-fread("/home/jmhan/breakpoints/minimap/chimpanzee/telocentrodata/hm_centroend.tsv")
+  result_refcentr<-fread(args[6])
   result_quecentr<-""
 }
-if(cta){
-  result_reftelo<-fread("/home/jmhan/breakpoints/minimap/chimpanzee/telocentrodata/hm_teloend.tsv")
-  result_quetelo<-fread("D:/MS/big test/macaque/end_quetelo.txt")
-  result_refcentr<-fread("/home/jmhan/breakpoints/minimap/chimpanzee/telocentrodata/hm_centroend.tsv")
-  result_quecentr<-fread("D:/MS/big test/macaque/end_quecen.txt")
-}
-if(ctn){
-  result_reftelo<-""
-  result_quetelo<-""
-  result_refcentr<-""
-  result_quecentr<-""
-}
+
 
 pos<-fread(args[3],fill=TRUE )
 cat("去除前的：",dim(pos)[1],"\n")
@@ -110,32 +95,7 @@ for(chrid in sorted_chrnames){
     }
     }
     assign(chrid,pos.chr)
-  }
-  if(cta){
-    quelist <- paste0("que", unique(align1$V1))
-    align2<-result_refcentr[result_refcentr$chr==chrid,]          ##人着丝粒
-    for(j in unique(align1$V1)){
-      align3<-result_quecentr[result_quecentr$chr==j,]
-      align1child<-alignintersect(align1[align1$V1==j,],align2,align3)
-      assign(paste0("que", j),align1child)
-    }
-    align1<-do.call(rbind,mget(quelist))
-    rm(list=quelist)
-    align2<-result_reftelo[result_reftelo$chr==chrid,]          ##人端粒
-    for(j in unique(align1$V1)){
-      align3<-result_quetelo[result_quetelo$chr==j,]      ##猩猩端粒
-      align1child<-alignintersect(align1[align1$V1==j,],align2,align3)
-      assign(paste0("que", j),align1child)
-    }
-    align1<-do.call(rbind,mget(quelist))
-    print(dim(align1)[1])
-    rm(list=quelist)
-    assign(chrid,align1)
-  }
-  
-  if(ctn){
-    assign(chrid,align1)
-  }
+  }  
 }
 
 
