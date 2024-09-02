@@ -80,6 +80,9 @@ for(chrid in sorted_chrnames){
             
           }else{
             dup_boundary$query_end<-dup_boundary$query_start
+            if(nrow(pos.chr[pos.chr$query_end<=dup_boundary$query_start,])==0){
+              next
+            }
             lis<-pos.chr[pos.chr$query_end<=dup_boundary$query_start,]$query_end
             dup_boundary$query_start<-lis[which.min(abs(lis-dup_boundary$query_start))]
             storehighdup_sdr<-rbind(storehighdup_sdr,dup_boundary[,colnames(storehighdup_sdr)])
