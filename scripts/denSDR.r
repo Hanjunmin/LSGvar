@@ -73,6 +73,9 @@ for(chrid in sorted_chrnames){
           dup_boundary$ref_start<-pos.chr[min(vectore)-1,]$ref_end
           if(pos.chr[min(vectore)-1,"orient"]=="-" & pos.chr[min(vectore),"orient"]=="-"){
             dup_boundary$query_start<-dup_boundary$query_end
+            if(nrow(pos.chr[pos.chr$query_start>=dup_boundary$query_end,])==0){
+              next
+            }
             lis<-pos.chr[pos.chr$query_start>=dup_boundary$query_end,]$query_start
             dup_boundary$query_end<-lis[which.min(abs(lis-dup_boundary$query_end))]
             storehighdup_sdr<-rbind(storehighdup_sdr,dup_boundary[,colnames(storehighdup_sdr)])
@@ -88,6 +91,9 @@ for(chrid in sorted_chrnames){
             storehighdup_sdr<-rbind(storehighdup_sdr,dup_boundary[,colnames(storehighdup_sdr)])
             ##
             dup_boundary$query_start<-pos.chr[min(vectore)-1,]$query_end
+            if(nrow(pos.chr[pos.chr$query_start>=dup_boundary$query_start,])==0){
+              next
+            }
             lis<-pos.chr[pos.chr$query_start>=dup_boundary$query_start,]$query_start
             dup_boundary$query_end<-lis[which.min(abs(lis-dup_boundary$query_start))]
             storehighdup_sdr<-rbind(storehighdup_sdr,dup_boundary[,colnames(storehighdup_sdr)])
@@ -104,6 +110,9 @@ for(chrid in sorted_chrnames){
           
           if(pos.chr[max(vectore)+1,"orient"]=="-" & pos.chr[max(vectore),"orient"]=="-"){
             dup_boundary$query_end<-dup_boundary$query_start
+            if(nrow(pos.chr[pos.chr$query_end<=dup_boundary$query_start,])==0){
+              next
+            }
             lis<-pos.chr[pos.chr$query_end<=dup_boundary$query_start,]$query_end
             dup_boundary$query_end<-lis[which.min(abs(lis-dup_boundary$query_start))]
             storehighdup_sdr<-rbind(storehighdup_sdr,dup_boundary[,colnames(storehighdup_sdr)])
@@ -111,12 +120,18 @@ for(chrid in sorted_chrnames){
 
           }else{
             dup_boundary$query_start<-dup_boundary$query_end
+            if(nrow(pos.chr[pos.chr$query_start>=dup_boundary$query_end,])==0){
+              next
+            }
             lis<-pos.chr[pos.chr$query_start>=dup_boundary$query_end,]$query_start
             dup_boundary$query_end<-lis[which.min(abs(lis-dup_boundary$query_end))]
             storehighdup_sdr<-rbind(storehighdup_sdr,dup_boundary[,colnames(storehighdup_sdr)])
             
             ##
             dup_boundary$query_end<-pos.chr[max(vectore)+1,]$query_start
+            if(nrow(pos.chr[pos.chr$query_end<=dup_boundary$query_end,])==0){
+              next
+            }
             lis<-pos.chr[pos.chr$query_end<=dup_boundary$query_end,]$query_end
             dup_boundary$query_start<-lis[which.min(abs(lis-dup_boundary$query_end))]
             storehighdup_sdr<-rbind(storehighdup_sdr,dup_boundary[,colnames(storehighdup_sdr)])
