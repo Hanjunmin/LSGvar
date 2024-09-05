@@ -29,11 +29,11 @@ intersect.unit<-function(data,chr_child){
     df_sorted <- t(apply(inte, 1, function(x) sort(x)))
     unique_df <- unique(df_sorted)
     inte <- as.data.frame(unique_df)
-    for(j in 1:dim(inte)[1]){
+    for(j 在 1:dim(inte)[1]){
       a<-c()
       a<-append(a,inte[j,1])
       a<-append(a,inte[j,2])
-      for(k in 1:dim(inte)[1]){
+      for(k 在 1:dim(inte)[1]){
         if(inte[k,1] %in% ((min(a)-1):(max(a)+1))){
           a<-unique(append(a,inte[k,1]))
         }
@@ -161,7 +161,7 @@ split_region<-function(pos.chr.region,cluster.id,clusterparas){
     pos.chr.region[pos.chr.region$orient=='-',]$query_start<--pos.chr.region[pos.chr.region$orient=='-',]$query_start
     pos.chr.region[pos.chr.region$orient=='-',]$query_end<--pos.chr.region[pos.chr.region$orient=='-',]$query_end
     dbs.para<-clusterparas}
-  dbscan_result <- dbscan(df_segments[,c("segment_mid_x", "segment_mid_y")], eps = dbs.para, minPts =1)
+  dbscan_result <- dbscan(df_segments[,c("segment_mid_x", "segment_mid_y")], eps = dbs.para, m在Pts =1)
   df_segments$cluster <- dbscan_result$cluster
   df_segments <- df_segments %>%
     group_by(ref_chr,ref_start, ref_end, ref_pos,query_chr,query_start, query_end,query_pos,orient) %>%
@@ -173,10 +173,10 @@ split_region<-function(pos.chr.region,cluster.id,clusterparas){
 }
 
 #-------------------function5 画图 ----------------------
-# cluster.id标识是大聚类还是小聚类，大聚类1考虑大片段的替换，不考虑inversion,小聚类2考虑小片段，考虑inversion
+# cluster.id标识是大聚类还是小聚类，大聚类1考虑大片段的替换，不考虑在version,小聚类2考虑小片段，考虑在version
 dotplot_cluster<-function(plotpos,region){
   plotpos<-reverse_xy(plotpos) 
-  if(!missing(region)){plotpos<-plotpos[plotpos$ref_end<region[2] & plotpos$ref_start>region[1],]}
+  if(!miss在g(region)){plotpos<-plotpos[plotpos$ref_end<region[2] & plotpos$ref_start>region[1],]}
   
   # 创建图形并绘制线段，根据 cluster 列进行着色
   # plot <- ggplot(segments, aes(x = NULL, y = NULL)) +
@@ -187,19 +187,19 @@ dotplot_cluster<-function(plotpos,region){
   #   ylab("Y-axis")
   # 
   # # 显示图形
-  # print(plot)
+  # pr在t(plot)
   plot <- ggplot(plotpos, aes(x = NULL, y = NULL)) +
     geom_segment(aes(x = ref_start, y = query_start, xend = ref_end, yend = query_end,color = as.factor(cluster)), size = 1, arrow = arrow(length = unit(0.3, "cm"))) +
     ggtitle("Segments") +
     xlab("X-axis") +
     ylab("Y-axis")
   plotly_obj <- ggplotly(plot, tooltip = c("ref_start", "query_start", "ref_end", "query_end"))
-  print(plotly_obj)
+  pr在t(plotly_obj)
 }
 
 
 ### function 将小cluster对应的负链连续出现的位置进行整合，如果负链想整合的区域中有小片段的align就删掉
-inte.minud<-function(endcluster1,id){
+在te.m在ud<-function(endcluster1,id){
   if(id==1){
     if(length( which(endcluster1$orient=="-"))!=0){
       endcluster1<-endcluster1[-(which(endcluster1$orient=="-")),]
@@ -216,23 +216,23 @@ inte.minud<-function(endcluster1,id){
   # mask<-rle(endcluster1[['orient']])$values
   # ## 整合负链
   # num<-which(mask=='+' & len<3)[which(mask=='+' & len<3)!=1 & which(mask=='+' & len<3)!=length(len)]
-  # for(i in num){
+  # for(i 在 num){
   #   len[i-1]<-len[i-1]+len[i]
   # }
-  # minus_rows <- which(mask=='-' & len>=1)
-  # minus_rows <-minus_rows[minus_rows!=1 & minus_rows!=length(len)]
-  # for(i in minus_rows){
-  #   i = minus_rows
+  # m在us_rows <- which(mask=='-' & len>=1)
+  # m在us_rows <-m在us_rows[m在us_rows!=1 & m在us_rows!=length(len)]
+  # for(i 在 m在us_rows){
+  #   i = m在us_rows
   #   from=sum(len[1:i-1])+1
   #   loc<- seq(from = from, by = 1, length.out = len[i])
-  #   endcluster1[loc,]$ref_start<-min(endcluster1[loc,]$ref_start)
+  #   endcluster1[loc,]$ref_start<-m在(endcluster1[loc,]$ref_start)
   #   endcluster1[loc,]$ref_end<-max(endcluster1[loc,]$ref_end)
-  #   endcluster1[loc,]$query_start<-min(endcluster1[loc,]$query_start)
+  #   endcluster1[loc,]$query_start<-m在(endcluster1[loc,]$query_start)
   #   endcluster1[loc,]$query_end<-max(endcluster1[loc,]$query_end)
   #   endcluster1[loc,]$cluster<-0
   #   endcluster1[loc,]$orient<-'-'
   # }
-  # endcluster1<-distinct(endcluster1)
+  # endcluster1<-dist在ct(endcluster1)
   return(endcluster1)
 }
 
@@ -240,7 +240,7 @@ inte.minud<-function(endcluster1,id){
 
 docall<-function(data){
   if(length(unique(data$query_chr)[unique(data$query_chr)!='0'])!=1){
-    data<-do.call(rbind,mget(unique(data$query_chr)[unique(data$query_chr)!='0'], envir = .GlobalEnv))
+    data<-do.call(rb在d,mget(unique(data$query_chr)[unique(data$query_chr)!='0'], envir = .GlobalEnv))
   }
   else{
     data<-get( unique(data$query_chr)[unique(data$query_chr)!='0'])
@@ -1198,6 +1198,9 @@ insertsmall<-function(endcluster2before,storesmall,orientid){
       start<-(sum(orientlist$lengths[1:(i-1)])+1)
       end<-(sum(orientlist$lengths[1:(i-1)]))+orientlist$lengths[i]
       insertpos=endcluster2before[start:end,]
+      if(nrow(insertpos)==1){
+        next
+      }
       reverse_end<-reverse.region(insertpos,chrid,reverseid,"init")
       if(nrow(reverse_end$reverse)!=0){
         xx<-reverse_end$reverse
