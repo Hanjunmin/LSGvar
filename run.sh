@@ -86,6 +86,9 @@ bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h1cigarout.txt" "${nowdic}/r
 if [ -n "$hap2_path" ]; then  ## two haplotypes
 bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h2cigarout.txt" "${nowdic}/results/h2cigarsdr.vcf" "${nowdic}/denSDRhap2/SDRall.txt" $ref_path $hap2_path "${nowdic}/h2cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py" "${nowdic}/results/LSGvarend2.bed"
 fi
+[ -f "${nowdic}/inv.csv" ] && rm "${nowdic}/inv.csv"
+[ -f "${nowdic}/ins.csv" ] && rm "${nowdic}/ins.csv"
+[ -f "${nowdic}/del.csv" ] && rm "${nowdic}/del.csv"
 ##------------------------------------------------------------------------- step7.split and integrate------------------------------------------
 bash "${tool_path}/scripts/splitfile.sh" "${nowdic}/h1" "${nowdic}/results/h1cigarsdr.vcf" 
 if [ -n "$hap2_path" ]; then  ## two haplotypes
