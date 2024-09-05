@@ -37,7 +37,6 @@ def process_line(line):
 	minus = columns[4]  ## 判断正负链
 	ref_chr = columns[5]
 	ref_start = columns[7]
-	print(ref_start)
 	ref_end = columns[8]
 	query_chr = columns[0]
 	query_start = columns[2]
@@ -129,7 +128,6 @@ def process_line(line):
 	with open("temp/"+ref_chr+":"+ref_start+"-"+ref_end+"_"+query_chr+":"+query_start+"-"+query_end+".cigar", 'w') as outfile:
 		for line in result_lines:
 			outfile.write(line)
-	print("yes")
 	return result_lines	
 
 	
