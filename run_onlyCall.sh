@@ -84,7 +84,10 @@ if [ -n "$hap2_path" ]; then  ## two haplotypes
 	cat  "${nowdic}/h2cigar.txt" temp/*.cigar >"${nowdic}/h2cigarend.txt"
 	rm temp/*.cigar
 fi
-
+[ -f "${nowdic}/ref.fa" ] && rm "${nowdic}/ref.fa"
+[ -f "${nowdic}/que.fa" ] && rm "${nowdic}/que.fa"
+[ -f "${nowdic}/query.bed" ] && rm "${nowdic}/query.bed"
+[ -f "${nowdic}/ref.bed" ] && rm "${nowdic}/ref.bed"
 ##--------------------------------------------------------------------------- step5.dup_filt--------------------------------------------------
 bash "${tool_path}/scripts/dup_filt.sh" "${nowdic}/afterchaos_hap1.flt.paf"  "${nowdic}/h1cigarend.txt" "${nowdic}/h1cigarout.txt"  
 if [ -n "$hap2_path" ]; then  ## two haplotypes
