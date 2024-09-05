@@ -43,11 +43,21 @@ fi
 ##------------------------------------------------------------------ step3.Cluster and call SV------------------------------------------------
 [ -d denSDRhap1 ] || mkdir denSDRhap1
 Rscript "${tool_path}/scripts/denSDR.r"  "${tool_path}/scripts/denSDRfun.r" "${nowdic}/h1syntenic_blocks.tsv" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/denSDRhap1/"
+if [ $? -eq 0 ]; then
+    echo "hap1 CLUSTER Success" && rm "${nowdic}/h1syntenic_blocks.tsv" && rm "${nowdic}/p_c_chrlen1.txt"
+else
+    echo "hap1 CLUSTER Failure"
+fi
 cat ${nowdic}/denSDRhap1/*end.tsv > "${nowdic}/denSDRhap1/SDRall.txt"
 
 if [ -n "$hap2_path" ]; then  ## two haplotypes
 [ -d denSDRhap2 ] || mkdir denSDRhap2
 Rscript "${tool_path}/scripts/denSDR.r"  "${tool_path}/scripts/denSDRfun.r" "${nowdic}/h2syntenic_blocks.tsv" "${nowdic}/p_c_chrlen2.txt" "${nowdic}/denSDRhap2/"
+if [ $? -eq 0 ]; then
+    echo "hap2 CLUSTER Success" && rm "${nowdic}/h2syntenic_blocks.tsv" && rm "${nowdic}/p_c_chrlen2.txt"
+else
+    echo "hap2 CLUSTER Failure"
+fi
 cat ${nowdic}/denSDRhap2/*end.tsv > "${nowdic}/denSDRhap2/SDRall.txt"
 fi
 
@@ -89,6 +99,11 @@ if [ -n "$hap2_path" ]; then
 	bash "${tool_path}/scripts/phenotype.sh" "${nowdic}/h1" "${nowdic}/h2" ${ref_path} "${nowdic}/afterchaos_hap1.flt.paf" "${nowdic}/afterchaos_hap2.flt.paf" 
 	bash "${tool_path}/scripts/vcf2bedGT.sh" "${nowdic}/results/sortLSGvarall.vcf.gz" "${nowdic}/results/LSGvarend1.bed" "${nowdic}/results/LSGvarend2.bed" "${nowdic}/results/LSGvar.bed"
 fi
+
+[ -f "${nowdic}/h2cigar.txt" ] && rm "${nowdic}/h2cigar.txt"
+[ -f "${nowdic}/h1cigar.txt" ] && rm "${nowdic}/h1cigar.txt"
+
+
 
 # if [ ! -d "${nowdic}/result" ]; then
 # 	mkdir "${nowdic}/result"
