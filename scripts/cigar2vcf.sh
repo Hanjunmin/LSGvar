@@ -60,7 +60,7 @@ paste ${file} <(awk '{print $1 "-" $2 "-" $8 "-" $9 "-" $10}' ${file}) <(awk -F'
 less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $12,$9,$10,".",".",$13,$14,$15}' >testchr1snvend.txt
 cat testchr1snvend.txt >endcigar.vcf
 sed 's/SNP/SNV/g' endcigar.vcf >end2cigar.vcf
-
+rm testchr1snvend.txt
 
 
 less -S $3 |awk '$7 ~ "DEL" || $7 ~"INS" ||$7 ~"INV"{print $0}' |awk -F'\t' '($9!=0 || $10!=0){print $0}' >SDRend.txt
@@ -81,7 +81,7 @@ less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", 
 rm ourins.txt
 rm testbe.txt
 cat <(less -S $6 |awk 'index($3, "INS"){print$0}') testchr1insend.txt >ourinsend.txt
-
+rm testchr1insend.txt
 
 ##DEL
 awk -F'\t' '$8=="DEL"{print$0}' CIGARend.txt >ourdel.txt
@@ -91,7 +91,7 @@ less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", 
 rm ourdel.txt
 rm testbe.txt
 cat <(less -S $6 |awk 'index($3, "DEL"){print$0}') testchr1delend.txt >ourdelend.txt
-
+rm testchr1delend.txt
 ##INV
 cat <(less -S $6 |awk 'index($3, "INV"){print$0}')  >ourinvend.txt
 
