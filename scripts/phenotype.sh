@@ -16,9 +16,8 @@ file="mergesnv.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_fil
 # 19:42
 awk -F '\t' '{
     if ($0 ~ /^##/) {
-        print $0;  # 输出当前行
+        print $0; 
     } else if ($0 ~ /^#CHROM/) {
-        # 输出指定的字符串
         print "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHG002";
     } else {
         OFS="\t";  
@@ -33,12 +32,13 @@ awk -F '\t' '{
     }
 }' mergesnv.vcf > mergesnvend.vcf
 file="mergesnvend.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
-rm $file".gz"
+if [ -f "$file.gz" ]; then
+  rm "$file.gz"
+fi
+
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
-#conda activate truvari4
-#nohup truvari bench -s 0  -b /home/jmhan/SDR/HG002/CIGAR/HG002process/sorthg002bensnv.vcf.gz -c sortmergesnvend.vcf.gz --reference $ref --includebed /home/jmhan/SDR/HG002/genome/HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed -o snv  &
 
 
 
@@ -49,9 +49,8 @@ bcftools index -t "sort"$file".gz"
 /share/home/zhanglab/user/yangchentao/miniconda3/bin/truvari collapse -s 0 -S 50 -p 0.7 -P 0.7 -r 10 -i "sort"$file".gz" -o "${file}_merge.vcf" -c "${file}_collapsed.vcf" -f  $ref
 awk -F '\t' '{
     if ($0 ~ /^##/) {
-        print $0;  # 输出当前行
+        print $0;  
     } else if ($0 ~ /^#CHROM/) {
-        # 输出指定的字符串
         print "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHG002";
     } else {
         OFS="\t";  
@@ -66,7 +65,10 @@ awk -F '\t' '{
     }
 }' "${file}_merge.vcf" > mergeindelend.vcf
 file="mergeindelend.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
-rm $file".gz"
+if [ -f "$file.gz" ]; then
+  rm "$file.gz"
+fi
+
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
@@ -85,9 +87,8 @@ bcftools index -t "sort"$file".gz"
 /share/home/zhanglab/user/yangchentao/miniconda3/bin/truvari collapse -i "sort"$file".gz" -o mergesv.vcf -c collapsedsv.vcf -f $ref
 awk -F '\t' '{
     if ($0 ~ /^##/) {
-        print $0;  # 输出当前行
+        print $0; 
     } else if ($0 ~ /^#CHROM/) {
-        # 输出指定的字符串
         print "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHG002";
     } else {
         OFS="\t";  
@@ -115,11 +116,13 @@ cat <(zcat sortmergesv_end.vcf.gz|awk -F'\t' '{if($0 ~ /^#/){print $0}else{OFS="
         print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}}') <(zcat sortmergesnvend.vcf.gz |awk -F'\t' '{if($0 ~ /^#/){next}else{OFS="\t"
         print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10}}') > LSGvar.vcf
 file="LSGvar.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
-rm $file".gz"
+if [ -f "$file.gz" ]; then
+  rm "$file.gz"
+fi
+
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
-#nohup truvari bench --pctseq 0.6 --pctsize 0.5 -b /home/jmhan/SDR/HG002/genome/hg002sv_12745/sortbenv0.6.vcf.gz -c "sort"$file".gz" --reference $ref --includebed /home/jmhan/SDR/HG002/genome/v0.6consistent.bed -o end &
 
 
 gunzip sortLSGvar.vcf.gz
@@ -133,7 +136,9 @@ paste <(less -S  overlapped.vcf |awk 'OFS="\t"{print $1,$2,$3,$4,$5,$6,$7,$8,$9}
 awk 'NR==FNR {lines[$1]; next} FNR in lines' sediff.num sortLSGvar.vcf >sed.vcf
 cat sed.vcf over.vcf >LSGvarall.vcf
 file="LSGvarall.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
-rm $file".gz"
+if [ -f "$file.gz" ]; then
+  rm "$file.gz"
+fi
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
