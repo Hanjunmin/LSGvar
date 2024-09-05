@@ -55,19 +55,25 @@ less -S "${folder}/count.vcf"  |awk -F'\t' '{
 ## SV
 cd ${folder}
 file="SV.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
-rm $file".gz"
+if [ -f "$file.gz" ]; then
+  rm "$file.gz"
+fi
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
 
 file="snv.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
-rm $file".gz"
+if [ -f "$file.gz" ]; then
+  rm "$file.gz"
+fi
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
 
 file="indel.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
-rm $file".gz"
+if [ -f "$file.gz" ]; then
+  rm "$file.gz"
+fi
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
