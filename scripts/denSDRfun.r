@@ -49,7 +49,6 @@ intersect.unit<-function(data,chr_child){
         data[min(x),]$query_end<-max(data[x,]$query_end)
         data[x,]<-data[min(x),]
         data[x,]$anno<-"COMPLEX"
-        print(x)
       }
       else{
         if(length(intersect(a,x))==0){
@@ -194,7 +193,6 @@ dotplot_cluster<-function(plotpos,region){
     xlab("X-axis") +
     ylab("Y-axis")
   plotly_obj <- ggplotly(plot, tooltip = c("ref_start", "query_start", "ref_end", "query_end"))
-  print(plotly_obj)
 }
 
 
@@ -309,7 +307,7 @@ clusterbigminus<-function(endcluster1,cluster.id,add){
     cor1<-min(cor1,cor(1:dim(x1)[1], x1$query_start))
   }
   if(cor1<0.5){ ##加一步计算相关系数，如果相关系数关系不大说明差别很大，是跨染色体重排
-    print(unique(endcluster1$ref_chr))
+
   }
   if(cluster.id==0 & cor1>=0.5){
     newpos_end<-pos_end
@@ -379,7 +377,6 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
       #     }
       #   }
       # }
-      print(cross.region)
       #for(k in setdiff(names(x)[x<=thereshod],cross.region)){
       for(k in setdiff(result[result$total_length<thereshod1,]$cluster,cross.region)){
         #print(k)
@@ -482,7 +479,6 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
             else{
               delsytenic<-endcluster1[idd,]
             }
-            print(delsytenic)
             
             if(exists("dupli")){
               dupli<-rbind(dupli,transduplication_extract(endcluster1,endcluster1[idd,]))
@@ -1042,7 +1038,6 @@ repeat.integrate<-function(data,repeatid){
           data<-data[-i,]
           next
         }
-        print(i)
         data[i,]$ref_start<-min(data[c(list,i),]$ref_start)
         data[i,]$ref_end<-max(data[c(list,i),]$ref_end)
         data[i,]$query_start<-min(data[c(list,i),]$query_start)
@@ -1211,7 +1206,6 @@ insertsmall<-function(endcluster2before,storesmall,orientid){
         }
         
         storesmall<-rbind(storesmall,xx[,colnames(storesmall)])
-        print(storesmall)
       }
       
     }
@@ -1459,7 +1453,6 @@ duplication_extract<-function(endcluster1,pos_end){
           data[inte[j,2],]$ref_start=data[inte[j,1],]$ref_end
         }
         if(startregion>endregion){
-          print("a")
           next
         }
         ir1ref <- IRanges(start = endcluster1$ref_start, end = endcluster1$ref_end)
@@ -1607,7 +1600,6 @@ highdupregion<-function(pos.chr){
     grouped_vectors <- tapply( inte$queryHits, inte$subjectHits, FUN = function(x) x)
     if(type(grouped_vectors)=="list"){
       for(group in names(grouped_vectors)){
-        print(group)
         group_list<-grouped_vectors[[group]]
         for(group_id in group_list ){
           grouped_vectors[[group]]<-append(grouped_vectors[[group]],grouped_vectors[[as.character(group_id)]])
