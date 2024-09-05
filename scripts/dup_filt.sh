@@ -54,7 +54,7 @@ else
 fi
 
 
-rm cigartestin.txt && rm refpaf.region
+rm cigartestin.txt && rm refpaf.region && rm del.txt && rm sample_freq.txt && rm mergedup.txt && rm test.txt
 
 ## test
 # less -S mergedup.txt | less -S | while read -r line; do
