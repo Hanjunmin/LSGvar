@@ -654,8 +654,8 @@ write.table(data, paste(args[4],chrid,"end.tsv",sep = ""), quote = FALSE, sep = 
 #write.table(minimap, paste("D:/MS/saffire测试/R/minimap/",chrid,"minimap.tsv",sep = ""), quote = FALSE, sep = "\t", row.names = FALSE)
 }
 colnames(INVball)<-c("ref_chr","ref_start","ref_end","query_chr","query_start",
-"query_end"  ， "anno"     ,   "orient"   ,   "ref_p_1s"  ,  "ref_p_1e"  ,
-"que_p_1s"  ，  "que_p_1e"  ,  "ref_p_2s"   , "ref_p_2e"  ,  "que_p_2s"  ,
+"query_end" , "anno"     ,   "orient"   ,   "ref_p_1s"  ,  "ref_p_1e"  ,
+"que_p_1s" ,  "que_p_1e"  ,  "ref_p_2s"   , "ref_p_2e"  ,  "que_p_2s"  ,
 "que_p_2e")
 write.table(INVball, paste(args[4],"INVresult.tsv",sep = ""), quote = FALSE, sep = "\t", row.names = FALSE)
 #write.csv(result_data[result_data$SV=="DUP",], paste("D:/MS/saffire测试/R/result/SDRend.csv",sep = ""), quote = FALSE, row.names = FALSE)
