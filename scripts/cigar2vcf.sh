@@ -112,7 +112,7 @@ less -S $3  |grep 'COMPLEX' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-CO
 cat <(echo -e "#CHROM\tPOS\tID\tEND\tSVTYPE\tSVLEN\tHAP\tGT\tQUERY") SNV.bed INS.bed DEL.bed TRANS.bed  SDR.bed DUP.bed Highdup.bed INV.bed  complex.bed >LSGvar.bed
 less -S LSGvar.bed |awk 'OFS="\t"{print $1,$2,$4,$3,$5,$6,$7,$8,$9}' > $8
 
-rm SDRend.txt && rm addout.txt && rm *.bed && rm *.vcf && rm CIGARend.txt && rm oursnv.txt
+rm SDRend.txt && rm addout.txt && rm *.bed && rm *.vcf && rm CIGARend.txt && rm oursnv.txt && rm ourinsend.txt && rm  ourdelend.txt && rm ourinvend.txt
 # mark=$8
 # if [ "$mark" = "4.2.1" ]; then
 #     cat /home/jmhan/SDR/HG002/header.txt <(less -S hg002cigar.vcf |awk '$1!="chrX" && $1!="chrY"{print $0}' |awk 'NR>=3{print $0}')  >$fileout
