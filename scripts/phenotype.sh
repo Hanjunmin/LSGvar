@@ -103,7 +103,9 @@ awk -F '\t' '{
     }
 }' mergesv.vcf > mergesv_end.vcf
 file="mergesv_end.vcf" #hg002benend.vcf ourend.vcf giab.vcf ourpaend.vcf output_file.vcf
-rm $file".gz"
+if [ -f "$file.gz" ]; then
+  rm "$file.gz"
+fi
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
