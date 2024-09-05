@@ -56,7 +56,6 @@ for(chrid in sorted_chrnames){
   dupset<-highdupregion(pos.chr)
   if(length(dupset)!=1 ||length(dupset[[1]]>=5)){
     for (dupsetname in names(dupset)){
-      print(length(dupset[[dupsetname]]))
       if(length(dupset[[dupsetname]])>=5){
         vectore<-append(dupset[[dupsetname]],as.numeric(dupsetname))
         higndup<-pos.chr[vectore,]
@@ -251,12 +250,11 @@ for(chrid in sorted_chrnames){
 
   endcluster1<-split_region(endcluster0,1,cluster1paras)
   
-  ## 构建一个函数重新调整minus的聚类
+
   endcluster1<-minus.next(endcluster1)
   
   i=0
   for(miusclu in unique(endcluster1[endcluster1$orient=='-',]$cluster)){
-    print(miusclu)
     list<-which(endcluster1$cluster==miusclu)
     if(length(list)>=2){
       for(line in 2:length(list)){
@@ -274,7 +272,7 @@ for(chrid in sorted_chrnames){
   
   
 
-  ## 如果两个inversion之间距离大于某一个值，就把它分开为两类
+
   
   
   
@@ -297,7 +295,6 @@ for(chrid in sorted_chrnames){
     
     start<-sum(chaoval[1:k-1]*chaolen[1:k-1])+1
     endcluster1[intersect(which(!endcluster1$cluster %in% cross.region),start:(start+chaolen[k]-1)),]$cluster<-as.character(initclsuer)
-    print(endcluster1[intersect(which(!endcluster1$cluster %in% cross.region),start:(start+chaolen[k]-1)),])
     chaos<-endcluster1[intersect(which(!endcluster1$cluster %in% cross.region),start:(start+chaolen[k]-1)),]
     chaos$query_start<-abs(chaos$query_start)
     chaos$query_end<-abs(chaos$query_end)
@@ -393,9 +390,9 @@ for(chrid in sorted_chrnames){
     inversion<-distinct(inversion)
   }
   
-  cat("第一次大聚类后（Big cluster among）获得的的SDR数目是",dim(store)[1],"\n")  ##但是这个计算了每条染色体的最开始，如果是多个染色体的比对需要改一下
-  cat("获得的的inversion数目是",dim(inversion)[1]-1,"\n") 
-  cat("获得的的translocation数目是",dim(smalltrans)[1]-1,"\n") 
+  cat("Big cluster among:cluster num",dim(store)[1],"\n")  ##但是这个计算了每条染色体的最开始，如果是多个染色体的比对需要改一下
+  cat("inversion:",dim(inversion)[1]-1,"\n") 
+  cat("translocation:",dim(smalltrans)[1]-1,"\n") 
 
   endcluster1<-reverse_end$endcluster1
   #endcluster1<-endcluster1[endcluster1$cluster!="1000",]
@@ -414,17 +411,13 @@ for(chrid in sorted_chrnames){
   #   rm(list=unique(endcluster1$query_chr)) ##删除变量
   # }
   
-  ## 现在需要二轮的聚类啦
-  
-  ## 如果比对中有找到的杂乱区域，就把这些比对去掉
-  ## 在计算大SDR的时候把INV小的cluster聚到一起了，在这里想更精确一点
+
   
   m=0
   count_minus <- table(endcluster1$cluster[endcluster1$orient == '-'])
   count_total <- table(endcluster1$cluster[endcluster1$cluster%in% names(count_minus)])
   ##cluster
   for(clusid in names(count_minus[(count_minus / count_total) >0.6]) ){
-    print(clusid)
     miuscluster<-split_region(endcluster1[endcluster1$cluster==clusid,],1,100000)
     minusduplic<-duplication_extract(endcluster1,miuscluster)  
     if(!isEmpty(minusduplic$dupli)){
@@ -548,7 +541,6 @@ for(chrid in sorted_chrnames){
     local<-intersect.unit(middle,unique(middle$query_chr)) #将among中复杂片段作为一个大SDR
     changed_rows <- anti_join(local,middle)
     if(nrow(changed_rows)!=0){
-      print(k)
       changed_rows$anno<-'COMPLEX'
       store<-rbind(store,changed_rows[,colnames(store)])
       
@@ -566,10 +558,10 @@ for(chrid in sorted_chrnames){
     storesmall<-insertsmall(endcluster2before,storesmall,orientid)
     
   }
-  cat("第二次小聚类后一起获得的的SDR数目是",dim(store)[1],"\n")
-  cat("第二次小聚类后一起获得的的INV数目是",dim(inversion)[1],"\n")
-  cat("第二次小聚类后一起获得的的DUP数目是",dim(duplication)[1],"\n")
-  cat("第二次小聚类后一起获得的TRAN数目是",dim(smalltrans)[1],"\n")
+  cat("second cluster:SDR num",dim(store)[1],"\n")
+  cat("second cluster:INV num",dim(inversion)[1],"\n")
+  cat("second cluster:dup num",dim(duplication)[1],"\n")
+  cat("second cluster:trans num",dim(smalltrans)[1],"\n")
   inversion$anno<-"INV"
   inversion$orient<-"-"
   duplication<-distinct(duplication)
@@ -662,8 +654,8 @@ write.table(data, paste(args[4],chrid,"end.tsv",sep = ""), quote = FALSE, sep = 
 #write.table(minimap, paste("D:/MS/saffire测试/R/minimap/",chrid,"minimap.tsv",sep = ""), quote = FALSE, sep = "\t", row.names = FALSE)
 }
 colnames(INVball)<-c("ref_chr","ref_start","ref_end","query_chr","query_start",
-"query_end"  , "anno"     ,   "orient"   ,   "ref_p_1s"  ,  "ref_p_1e"  ,
-"que_p_1s"  ,  "que_p_1e"  ,  "ref_p_2s"   , "ref_p_2e"  ,  "que_p_2s"  ,
+"query_end"  ， "anno"     ,   "orient"   ,   "ref_p_1s"  ,  "ref_p_1e"  ,
+"que_p_1s"  ，  "que_p_1e"  ,  "ref_p_2s"   , "ref_p_2e"  ,  "que_p_2s"  ,
 "que_p_2e")
 write.table(INVball, paste(args[4],"INVresult.tsv",sep = ""), quote = FALSE, sep = "\t", row.names = FALSE)
 #write.csv(result_data[result_data$SV=="DUP",], paste("D:/MS/saffire测试/R/result/SDRend.csv",sep = ""), quote = FALSE, row.names = FALSE)
