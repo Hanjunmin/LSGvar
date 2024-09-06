@@ -144,7 +144,7 @@ fi
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
-cp "sort"$file".gz" ../
+cp -r "sort"$file".gz" ../
 
 
 ## grch38
