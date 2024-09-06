@@ -127,7 +127,7 @@ bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
 
 
-gunzip sortLSGvar.vcf.gz
+gunzip -f sortLSGvar.vcf.gz
 awk '{print $0 "\t" NR}' sortLSGvar.vcf >sortLSGvar.num.vcf
 bedtools intersect -a sortLSGvar.num.vcf -b h1_h2intersec.bed |uniq > overlapped.vcf
 less -S overlapped.vcf  |awk '{print $11}' |uniq >overlap.num
@@ -144,7 +144,7 @@ fi
 bgzip $file
 bcftools sort $file".gz" -o "sort"$file".gz"
 bcftools index -t "sort"$file".gz"
-cp -r "sort"$file".gz" ../
+cp  "sort"$file".gz" ../
 
 
 ## grch38
