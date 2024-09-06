@@ -11,6 +11,8 @@ environment.yml
 + minimap2
 + rustybam
 + truvari(4.2.1)
++ bcftools
++ bgzip
 + Python (Bio, subprocess, multiprocessing)
 
 ## WorkFlow
