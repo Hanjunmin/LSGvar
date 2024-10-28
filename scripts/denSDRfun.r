@@ -795,7 +795,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
       
     }
     if(cluster.id==2){
-      if(dim(chrchch)[1]!=1){
+      if(dim(chrchch)[1]!=1 & dim(chrchch)[1]>0){
         for (i in 2:dim(chrchch)[1]-1){
           ## 序列前后相同的情况
           
