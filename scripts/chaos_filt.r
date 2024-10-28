@@ -189,8 +189,9 @@ flit2saffire(pos,"filt_process.saffire")
 delall<-c()
 for(chrid in sorted_chrnames){
   pos.chr<-pos[pos$V6==chrid,]
-  del<-split_region(pos.chr)
-  delall<-append(delall,del)
+  if(nrow(pos.chr)!=0){del<-split_region(pos.chr)
+  delall<-append(delall,del)}
+  
 }
 xxx<-pos[!pos$sourse %in% delall,]
 
