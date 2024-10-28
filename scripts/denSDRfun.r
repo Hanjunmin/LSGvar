@@ -297,14 +297,22 @@ clusterbigminus<-function(endcluster1,cluster.id,add){
   # }
   pos_end<-distinct(pos_end)
   
-  cor1<-10
+cor1<-10
   for(chr in unique(endcluster1$query_chr)){
     x1<-pos_end[pos_end$query_chr==chr,]
     if(dim(x1)[1]==1){
       cor1<-1
       next
     }
-    cor1<-min(cor1,cor(1:dim(x1)[1], x1$query_start))
+    f1=1:dim(x1)[1]
+    f2=x1$query_start
+    if (var(f2) == 0) {
+      f2 <- f2 + runif(length(f2), min = 1e-6, max = 1e-5)  # 加入小噪声
+    }
+    if (var(f1) == 0) {
+      f1 <- f1 + runif(length(f1), min = 1e-6, max = 1e-5)  # 加入小噪声
+    }
+    cor1<-min(cor1,cor(f1, f2))
   }
   if(cor1<0.5){ ##加一步计算相关系数，如果相关系数关系不大说明差别很大，是跨染色体重排
 
