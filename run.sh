@@ -102,7 +102,10 @@ fi
 if [ -n "$hap2_path" ]; then
 	[ -d results/integrate ] || mkdir -p results/integrate 
 	cd  results/integrate
-	bash "${tool_path}/scripts/phenotype.sh" "${nowdic}/h1" "${nowdic}/h2" ${ref_path} "${nowdic}/afterchaos_hap1.flt.paf" "${nowdic}/afterchaos_hap2.flt.paf" 
+ 	less -S "${nowdic}/afterchaos_hap1.flt.paf" |awk 'OFS="\t"{print $1,$3,$4}'|bedtools sort |bedtools merge -i - >h1_paf.bed
+	less -S "${nowdic}/afterchaos_hap2.flt.paf" |awk 'OFS="\t"{print $1,$3,$4}'|bedtools sort |bedtools merge -i - >h2_paf.bed
+	bedtools intersect -a h1_paf.bed -b h2_paf.bed  |bedtools sort >h1_h2intersec.bed
+	bash "${tool_path}/scripts/phenotype.sh" "${nowdic}/h1" "${nowdic}/h2" ${ref_path} 
 	bash "${tool_path}/scripts/vcf2bedGT.sh" "${nowdic}/results/sortLSGvarall.vcf.gz" "${nowdic}/results/LSGvarend1.bed" "${nowdic}/results/LSGvarend2.bed" "${nowdic}/results/LSGvar.bed"
 fi
 
