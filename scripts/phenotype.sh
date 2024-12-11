@@ -1,8 +1,5 @@
 
 # snv
-less -S $4 |awk 'OFS="\t"{print $1,$3,$4}'|bedtools sort |bedtools merge -i - >h1_paf.bed
-less -S $5 |awk 'OFS="\t"{print $1,$3,$4}'|bedtools sort |bedtools merge -i - >h2_paf.bed
-bedtools intersect -a h1_paf.bed -b h2_paf.bed  |bedtools sort >h1_h2intersec.bed
 
 
 x=$1 #x="/home/jmhan/SDR/HG002/GRCH37/ma"  x="/home/jmhan/SDR/HG002/ma"
