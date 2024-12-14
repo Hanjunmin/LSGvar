@@ -286,25 +286,29 @@ for(chrid in sorted_chrnames){
     inver<-rbind(inver,duplication[duplication$orient=="-",colnames(inver)])
   }
   ##先把很乱的区域存储为SDR
-  list<-which(rle(rle(endcluster1$cluster)$lengths)$values==1 &rle(rle(endcluster1$cluster)$lengths)$lengths >5)
+    list<-which(rle(rle(endcluster1$cluster)$lengths)$values==1 &rle(rle(endcluster1$cluster)$lengths)$lengths >5)
   chaoval<-rle(rle(endcluster1$cluster)$lengths)$values
   chaolen<-rle(rle(endcluster1$cluster)$lengths)$lengths
   cross.region<-cross.calcu(endcluster1)
   initclsuer<-1000
   for(k in list){
-    
     start<-sum(chaoval[1:k-1]*chaolen[1:k-1])+1
-    endcluster1[intersect(which(!endcluster1$cluster %in% cross.region),start:(start+chaolen[k]-1)),]$cluster<-as.character(initclsuer)
-    chaos<-endcluster1[intersect(which(!endcluster1$cluster %in% cross.region),start:(start+chaolen[k]-1)),]
-    chaos$query_start<-abs(chaos$query_start)
-    chaos$query_end<-abs(chaos$query_end)
-    if(nrow(chaos)!=0){
-      chaos<-clusterall(chaos)
-    }
-    chaos$anno<-"COMPLEX"
-    store<-rbind(store,chaos[,colnames(store)])
-    initclsuer<-initclsuer+1
+    merclus=endcluster1[intersect(which(!endcluster1$cluster %in% cross.region),start:(start+chaolen[k]-1)),]$cluster
+    chaosdf<-endcluster1[intersect(which(!endcluster1$cluster %in% cross.region),start:(start+chaolen[k]-1)),]
+    for(quevalsub in unique(chaosdf$query_chr)){
+      endcluster1[endcluster1$query_chr==quevalsub & endcluster1$cluster %in% merclus,]$cluster<-as.character(initclsuer)
+      chaosdfsub=chaosdf[chaosdf$query_chr==quevalsub & chaosdf$cluster %in% merclus,]
+      chaosdfsub$query_start<-abs(chaosdfsub$query_start)
+      chaosdfsub$query_end<-abs(chaosdfsub$query_end)
+      if(nrow(chaosdfsub)!=0){
+        chaosdfsub<-clusterall(chaosdfsub)
+      }
+      chaosdfsub$anno<-"COMPLEX"
+      store<-rbind(store,chaosdfsub[,colnames(store)])
+      initclsuer<-initclsuer+1
+      }
   }
+  
   
   reverse_end<-reverse.region(endcluster1,chrid,0,"init")
   duplic<-reverse_end$dup
@@ -314,7 +318,7 @@ for(chrid in sorted_chrnames){
     }
     
   }
-  minimap<-reverse_end$minimaploc  ### !!!!!!!!不知道怎么求
+  minimap<-reverse_end$minimaploc 
   
   
   if ("delsytenic" %in% names(reverse_end)){
