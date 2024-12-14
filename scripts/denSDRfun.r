@@ -1539,7 +1539,7 @@ transduplication_extract<-function(endcluster1,pos_end){
         }
         startregion<-max(endcluster1[inte[j,2],]$ref_start,data[inte[j,1],]$ref_start)
         endregion<-min(endcluster1[inte[j,2],]$ref_end,data[inte[j,1],]$ref_end)
-        smalldup<-endcluster1[endcluster1$ref_start>=startregion && endcluster1$ref_end<=endregion,]
+        smalldup<-endcluster1[endcluster1$ref_start>=startregion & endcluster1$ref_end<=endregion,]
         if(nrow(smalldup)!=0){
           duplilist<-rbind(duplilist,smalldup) ##结合完全在其中的
         }
