@@ -583,6 +583,9 @@ for(chrid in sorted_chrnames){
     assign(chr_child,endfilter(all[all$query_chr==chr_child,],chrid,chr_child))
     
   }
+  if(nrow(all)==0){
+    next
+  }
   data<-docall(all)
   if(length(which(data$ref_start>data$ref_end))!=0){
     data<-data[-which(data$ref_start>data$ref_end),]
