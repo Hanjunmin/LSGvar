@@ -246,24 +246,140 @@ docall<-function(data){
   return(data)
 }
 
-
-
 ##----function 专门提取cluster2对应的inversion
+##!!!try to refine the breakpoints of inversions
+optimized_inversions <- list()
 inversion.extract<-function(endcluster1,chrid){
   endcluster1$query_start<-abs(endcluster1$query_start)
   endcluster1$query_end<-abs(endcluster1$query_end)
-  inversion<-endcluster1[endcluster1$orient=="-",] %>% group_by(cluster)%>%  #聚cluster
+  inversion<-endcluster1[endcluster1$orient=="-",] %>% group_by(cluster)%>%  #cluster
     summarise(ref_chr=ref_chr,ref_start=min(ref_start),
               ref_end=max(ref_end),
               query_chr=query_chr,
               query_starttem=min(pmin(query_end,query_start)),
               query_endtem=max(pmax(query_start,query_end)),
-              (names(which.max(table(orient))))) ###正链负链？？重新算一下
+              orient=(names(which.max(table(orient))))) 
   colnames(inversion)[6]<-"query_start"
   colnames(inversion)[7]<-"query_end"
-  inversion<-distinct(inversion) ##在进行处理之前先把inversion找到，已经找了全部的了
-  return(inversion)
+  inversion<-distinct(inversion) 
+  #1.record + cluster
+  write.table(endcluster1[endcluster1$orient == "+", c("ref_chr","ref_start","ref_end","ref_pos","query_chr","query_start","query_end","query_pos","orient","cluster")],
+            file = "endcluster1_forward.bed",
+            quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+  # 2.record inversions
+  inversion_reordered <- inversion[, c(2:ncol(inversion), 1)]  #move the first column to the end so we can do overlap
+
+  write.table(inversion_reordered,
+            file = "inversion_reverse.bed",
+            quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+  # 3.find overlap by bedtools intersect
+  system("bedtools intersect -a inversion_reverse.bed -b endcluster1_forward.bed -wa -wb > overlap.bed")
   
+  
+  for (i in seq_len(nrow(inversion))) {
+    b <- inversion[i, ]
+    
+    # 4.whether they have overlaps
+    if (file.info("overlap.bed")$size == 0) {
+      #breakpoints don't need to be refined, add to dataframe
+      optimized_inversions[[length(optimized_inversions) + 1]] <- b
+    } 
+    else {
+      overlaps <- read.table("overlap.bed", header = FALSE, stringsAsFactors = FALSE, comment.char = "")
+  
+      #find this inversion overlap
+      current_overlaps <- overlaps %>%
+        filter(overlaps$V1 == b$ref_chr & overlaps$V2 == b$ref_start & overlaps$V3 == b$ref_end)
+    
+      if (nrow(current_overlaps) > 1){
+        update_ref_start = 0
+        update_ref_end = 0
+        update_que_start = 0
+        update_que_end = 0
+        for (j in seq_len(nrow(current_overlaps))) {
+            a <- current_overlaps[j, ]
+            #look for whether both breakpoint need to be refined
+            if (a$V10 <= b$ref_start) {
+              #(1)inversion_start >= forward align start
+              update_ref_start = a$V11 #refine inversion ref_start as plus align ref end
+              update_que_start = a$V15 #refine inversion que_start as plus align que end
+              
+            } else if (a$V10 >= b$ref_start) {
+              #(2)inversion_start <= forward align start
+              update_ref_end = a$V10  #refine inversion ref_end as plus align ref start
+              update_que_end = a$V14  #refine inversion ref_end as plus align que start
+            } 
+          }
+          refine_ref_start <- ifelse(update_ref_start != 0, update_ref_start, b$ref_start)
+          refine_ref_end <- ifelse(update_ref_end != 0, update_ref_end, b$ref_end)
+          refine_que_start <- ifelse(update_que_start != 0, update_que_start, b$query_start)
+          refine_que_end <- ifelse(update_que_end != 0, update_que_end, b$query_end)
+
+          optimized_inversions[[length(optimized_inversions) + 1]] <- data.frame(
+              cluster = b$cluster,
+              ref_chr = b$ref_chr,
+              ref_start = refine_ref_start,  
+              ref_end = refine_ref_end,
+              query_chr = b$query_chr,
+              query_start = refine_que_start,
+              query_end = refine_que_end,
+              orient = "-"
+            )
+      }
+      else if (nrow(current_overlaps) == 0){
+        optimized_inversions[[length(optimized_inversions) + 1]] <- b
+      }
+      else {
+        a = current_overlaps
+        if (a$V10 <= b$ref_start) {
+            ##if the inversion is involved in the plus align, it's fake inversion, skip
+            if (a$V11 >= b$ref_end) {
+                next
+                }
+            else {
+            #only need to refine one breakpoint
+            optimized_inversions[[length(optimized_inversions) + 1]] <- data.frame(
+              cluster = b$cluster,
+              ref_chr = b$ref_chr,
+              ref_start = a$V11,  ##ref_start=overlap end
+              ref_end = b$ref_end,  
+              query_chr = b$query_chr,
+              query_start = a$V15, ##query_start=overlap end
+              query_end = b$query_end,
+              orient = "-"
+            )
+          }
+          } else if (a$V10 >= b$ref_start) {
+              ##if the inversion contains plus align, don't refine, add it to dataframe
+              if (a$V11 <= b$ref_end) {
+                optimized_inversions[[length(optimized_inversions) + 1]] <- b
+                }
+              else {
+                #only need to refine one breakpoint
+                optimized_inversions[[length(optimized_inversions) + 1]] <- data.frame(
+                  cluster = b$cluster,
+                  ref_chr = b$ref_chr,
+                  ref_start = b$ref_start,  
+                  ref_end = a$V10,  ##ref_end=overlap start
+                  query_chr = b$query_chr,
+                  query_start = b$query_start,
+                  query_end = a$V14, ##query_end=overlap start
+                  orient = "-"
+                )
+              }
+          }
+        } 
+      }
+    }
+
+  file.remove("endcluster1_forward.bed")
+  file.remove("inversion_reverse.bed")
+  file.remove("overlap.bed")
+
+  #combine results
+  optimized_inversions_df <- do.call(rbind, optimized_inversions)
+  return(optimized_inversions_df)
 }
 
 ## 这里加一个函数，如果前后都是-并且是反转的，就把这两个类聚在一起
