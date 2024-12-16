@@ -277,8 +277,10 @@ for(chrid in sorted_chrnames){
   
   
   inver<-inversion.extract(endcluster1,chrid)  ### 先把inversion提取出来
-  if(nrow(inver)!=0){
+  if (!is.null(inver) && nrow(inver) != 0) {
     colnames(inver)[8]="orient"
+  } else {
+    print("Warning: 'inver' is either NULL or has no rows.")
   }
   
   if(nrow(duplication)!=1){
@@ -388,7 +390,7 @@ for(chrid in sorted_chrnames){
   }
   store<-rbind(store,anti_join(initstore,store))
   
- if(dim(inver)[1]!=0){
+ if(!is.null(inver) && dim(inver)[1]!=0){
     inver<-inver[,colnames(inversion)]
     inversion<-rbind(inversion,inver)
     inversion<-distinct(inversion)
