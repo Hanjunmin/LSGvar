@@ -291,7 +291,7 @@ inversion.extract<-function(endcluster1,chrid){
       #find this inversion overlap
       current_overlaps <- overlaps %>%
         filter(overlaps$V1 == b$ref_chr & overlaps$V2 == b$ref_start & overlaps$V3 == b$ref_end)
-    
+      current_overlaps <- current_overlaps[order(current_overlaps$V11 - current_overlaps$V10, decreasing = TRUE), ]
       if (nrow(current_overlaps) > 1){
         update_ref_start = 0
         update_ref_end = 0
@@ -301,10 +301,15 @@ inversion.extract<-function(endcluster1,chrid){
             a <- current_overlaps[j, ]
             #look for whether both breakpoint need to be refined
             if (a$V10 <= b$ref_start) {
-              #(1)inversion_start >= forward align start
-              update_ref_start = a$V11 #refine inversion ref_start as plus align ref end
-              update_que_start = a$V15 #refine inversion que_start as plus align que end
-              
+              if (a$V11 >= b$ref_end) {
+                optimized_inversions[[length(optimized_inversions) + 1]] <- b
+                break
+                }
+              else {
+                #(1)inversion_start >= forward align start
+                update_ref_start = a$V11 #refine inversion ref_start as plus align ref end
+                update_que_start = a$V15 #refine inversion que_start as plus align que end
+              }
             } else if (a$V10 >= b$ref_start) {
               #(2)inversion_start <= forward align start
               update_ref_end = a$V10  #refine inversion ref_end as plus align ref start
@@ -335,7 +340,7 @@ inversion.extract<-function(endcluster1,chrid){
         if (a$V10 <= b$ref_start) {
             ##if the inversion is involved in the plus align, it's fake inversion, skip
             if (a$V11 >= b$ref_end) {
-                next
+                optimized_inversions[[length(optimized_inversions) + 1]] <- b
                 }
             else {
             #only need to refine one breakpoint
