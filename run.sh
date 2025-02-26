@@ -48,7 +48,8 @@ if [ $? -eq 0 ]; then
 else
     echo "hap1 CLUSTER Failure"
 fi
-cat ${nowdic}/denSDRhap1/*end.tsv > "${nowdic}/denSDRhap1/SDRall.txt"
+cat ${nowdic}/denSDRhap1/*end.tsv >} "${nowdic/denSDRhap1/SDRall.txt"
+bash "${tool_path}/realign.sh" -i "${nowdic/denSDRhap1/SDRall.txt" -r $ref_path -q $hap1_path -o "${nowdic/denSDRhap1/SDRall_final.txt"
 
 if [ -n "$hap2_path" ]; then  ## two haplotypes
 [ -d denSDRhap2 ] || mkdir denSDRhap2
@@ -59,15 +60,16 @@ else
     echo "hap2 CLUSTER Failure"
 fi
 cat ${nowdic}/denSDRhap2/*end.tsv > "${nowdic}/denSDRhap2/SDRall.txt"
+bash "${tool_path}/realign.sh" -i "${nowdic/denSDRhap2/SDRall.txt" -r $ref_path -q $hap2_path -o "${nowdic/denSDRhap2/SDRall_final.txt"
 fi
 
 ##-------------------------------------------------------------------------- step4.CIGAR--------------------------------------------------------
 [ -d temp ] || mkdir temp
-python "${tool_path}/scripts/CIGAR.py" --p $4 --r $ref_path --q $hap1_path --paf "${nowdic}/afterchaos_hap1.flt.paf" --o "${nowdic}/h1cigar.txt"
+python "${tool_path}/scripts/CIGAR.py" --r $ref_path --q $hap1_path --paf "${nowdic}/afterchaos_hap1.flt.paf" --o "${nowdic}/h1cigar.txt"
 cat "${nowdic}/h1cigar.txt" temp/*.cigar >"${nowdic}/h1cigarend.txt"
 rm temp/*.cigar
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-	python "${tool_path}/scripts/CIGAR.py" --p $4 --r $ref_path --q $hap2_path --paf "${nowdic}/afterchaos_hap2.flt.paf" --o "${nowdic}/h2cigar.txt"
+	python "${tool_path}/scripts/CIGAR.py" --r $ref_path --q $hap2_path --paf "${nowdic}/afterchaos_hap2.flt.paf" --o "${nowdic}/h2cigar.txt"
 	cat  "${nowdic}/h2cigar.txt" temp/*.cigar >"${nowdic}/h2cigarend.txt"
 	rm temp/*.cigar
 fi
@@ -85,9 +87,9 @@ fi
 if [ ! -d "${nowdic}/results" ]; then
 	mkdir "${nowdic}/results"
 fi
-bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h1cigarout.txt" "${nowdic}/results/h1cigarsdr.vcf" "${nowdic}/denSDRhap1/SDRall.txt" $ref_path $hap1_path "${nowdic}/h1cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py" "${nowdic}/results/LSGvarend1.bed"
+bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h1cigarout.txt" "${nowdic}/results/h1cigarsdr.vcf" "${nowdic}/denSDRhap1/SDRall_final.txt" $ref_path $hap1_path "${nowdic}/h1cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py" "${nowdic}/results/LSGvarend1.bed"
 if [ -n "$hap2_path" ]; then  ## two haplotypes
-bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h2cigarout.txt" "${nowdic}/results/h2cigarsdr.vcf" "${nowdic}/denSDRhap2/SDRall.txt" $ref_path $hap2_path "${nowdic}/h2cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py" "${nowdic}/results/LSGvarend2.bed"
+bash "${tool_path}/scripts/cigar2vcf.sh" "${nowdic}/h2cigarout.txt" "${nowdic}/results/h2cigarsdr.vcf" "${nowdic}/denSDRhap2/SDRall_final.txt" $ref_path $hap2_path "${nowdic}/h2cigarsdr.txt" "${tool_path}/scripts/SDR_vcf.py" "${nowdic}/results/LSGvarend2.bed"
 fi
 [ -f "${nowdic}/inv.csv" ] && rm "${nowdic}/inv.csv"
 [ -f "${nowdic}/ins.csv" ] && rm "${nowdic}/ins.csv"
@@ -111,12 +113,3 @@ fi
 
 [ -f "${nowdic}/h2cigar.txt" ] && rm "${nowdic}/h2cigar.txt"
 [ -f "${nowdic}/h1cigar.txt" ] && rm "${nowdic}/h1cigar.txt"
-
-
-
-# if [ ! -d "${nowdic}/result" ]; then
-# 	mkdir "${nowdic}/result"
-# fi
-# Rscript "${tool_path}/scripts/SDR.r" "${tool_path}scripts/SDRfun.r" "${nowdic}/h1syntenic_blocks.tsv" "${nowdic}/p_c_chrlen1.txt" "${nowdic}/result/" 
-# cd result/
-# cat ./*  |sort -r |uniq >end.txt
