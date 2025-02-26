@@ -70,9 +70,6 @@ intersect.unit<-function(data,chr_child){
 
 
 ##----------------------function1 定义一个函数：去除端粒和着丝粒区域的比对（有交集就去除）
-# align1<-endcluster1[endcluster1$query_chr==chr_child,]
-# align2<-store[store$query_chr==chr_child,]
-# align3<-store[store$query_chr==chr_child,]
 alignintersect<-function(align1,align2,align3){
   del.list<-c()
   cat("-------开始去除着丝粒和端粒区域的比对---------\n")
@@ -176,17 +173,6 @@ split_region<-function(pos.chr.region,cluster.id,clusterparas){
 dotplot_cluster<-function(plotpos,region){
   plotpos<-reverse_xy(plotpos) 
   if(!missing(region)){plotpos<-plotpos[plotpos$ref_end<region[2] & plotpos$ref_start>region[1],]}
-  
-  # 创建图形并绘制线段，根据 cluster 列进行着色
-  # plot <- ggplot(segments, aes(x = NULL, y = NULL)) +
-  #   geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, color = as.factor(cluster)), size = 1, arrow = arrow(length = unit(0.1, "cm"))) +
-  #   # 添加标题和标签
-  #   ggtitle("Segments") +
-  #   xlab("X-axis") +
-  #   ylab("Y-axis")
-  # 
-  # # 显示图形
-  # print(plot)
   plot <- ggplot(plotpos, aes(x = NULL, y = NULL)) +
     geom_segment(aes(x = ref_start, y = query_start, xend = ref_end, yend = query_end,color = as.factor(cluster)), size = 1, arrow = arrow(length = unit(0.3, "cm"))) +
     ggtitle("Segments") +
@@ -208,29 +194,6 @@ inte.minud<-function(endcluster1,id){
       endcluster1<-endcluster1[-(which(endcluster1$orient=="+")),]
     }
   }
-  
-  
-  # len<-rle(endcluster1[['orient']])$lengths
-  # mask<-rle(endcluster1[['orient']])$values
-  # ## 整合负链
-  # num<-which(mask=='+' & len<3)[which(mask=='+' & len<3)!=1 & which(mask=='+' & len<3)!=length(len)]
-  # for(i in num){
-  #   len[i-1]<-len[i-1]+len[i]
-  # }
-  # minus_rows <- which(mask=='-' & len>=1)
-  # minus_rows <-minus_rows[minus_rows!=1 & minus_rows!=length(len)]
-  # for(i in minus_rows){
-  #   i = minus_rows
-  #   from=sum(len[1:i-1])+1
-  #   loc<- seq(from = from, by = 1, length.out = len[i])
-  #   endcluster1[loc,]$ref_start<-min(endcluster1[loc,]$ref_start)
-  #   endcluster1[loc,]$ref_end<-max(endcluster1[loc,]$ref_end)
-  #   endcluster1[loc,]$query_start<-min(endcluster1[loc,]$query_start)
-  #   endcluster1[loc,]$query_end<-max(endcluster1[loc,]$query_end)
-  #   endcluster1[loc,]$cluster<-0
-  #   endcluster1[loc,]$orient<-'-'
-  # }
-  # endcluster1<-distinct(endcluster1)
   return(endcluster1)
 }
 
@@ -393,29 +356,9 @@ clusterbigminus<-function(endcluster1,cluster.id,add){
   rm("inte")
   pos_end<-endcluster1 %>% group_by(cluster)%>%  #聚cluster
     summarise(ref_chr=ref_chr,ref_start=min(ref_start),ref_end=max(ref_end),query_chr=query_chr,query_start=min(query_start),query_end=max(query_end),(names(which.max(table(orient))))) ###正链负链？？重新算一下
-  # pos_end<-pos_end[,-1]
-  # pos_end<-pos_end[,-7]
   pos_end<-distinct(pos_end)
   pos_end<-pos_end[order(pos_end$ref_start),]
-  ## 把重复的区域按照ref_end进行排序
-  
-  
-  
-  
-  ## 如果一个cluster中有其他cluster就进行整合
-  # for(j in 1:dim(pos_end)[1]){
-  #   for( k in setdiff(1:dim(pos_end)[1],j)){
-  #     if(pos_end[k,]$ref_start>=pos_end[j,]$ref_start & pos_end[k,]$ref_end<=pos_end[j,]$ref_end & pos_end[k,]$query_start>=pos_end[j,]$query_start & pos_end[k,]$query_end<=pos_end[j,]$query_end){
-  #       pos_end[j,]$ref_start<-min(pos_end[c(k,j),]$ref_start)
-  #       pos_end[j,]$ref_end<-max(pos_end[c(k,j),]$ref_end)
-  #       pos_end[j,]$query_start<-min(pos_end[c(k,j),]$query_start)
-  #       pos_end[j,]$query_end<-max(pos_end[c(k,j),]$query_end)
-  #       endcluster1[endcluster1$cluster==pos_end[k,]$cluster,]$cluster<-pos_end[j,]$cluster
-  #       pos_end[k,]<-pos_end[j,]
-  #       
-  #     }
-  #   }
-  # }
+
   pos_end<-distinct(pos_end)
   
 cor1<-10
@@ -479,34 +422,13 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
     
     ## 如果交叉就不管
     for(chr_child in unique(endcluster1$query_chr)){
-      #x=table(endcluster1[endcluster1$query_chr==chr_child,]$cluster)
       cal_len<-endcluster1[endcluster1$query_chr==chr_child,]
       cal_len$len<-cal_len$ref_end-cal_len$ref_start
       result <- cal_len %>%
         group_by(cluster) %>%
         summarise(total_length = sum(len))
-      #thereshod<-quantile(sort(as.vector(x)),0.8)/5
       thereshod1=1000000
-      #if((thereshod)<5){ ## 说明比对数较少eg，1  10  11   2   3   4   5   6   7   8   9 
-      # 390   1   2   1   2 838   1   1   2   1   4 
-      #thereshod=5 ## 跨物种的时候选5 因为比对很碎
-      # thereshod=2 ## 非跨物种的时候选2 因为比对本身很少
-      #}
-      #library(stringr)
       cross.region<-cross.calcu(endcluster1)
-      # pattern <- "(\\d)\\1{2,}((\\d)\\2{0,1}\\1{1,2})*\\2{3,}"
-      # ## 1112211222
-      # cross.region<-c()
-      # matches <- str_match_all(paste(endcluster1$cluster, collapse = ''), pattern)
-      # if (length(matches[[1]]) > 0) {
-      #   for (row_index in 1:nrow(matches[[1]])) {
-      #     if(matches[[1]][row_index,][2]!=matches[[1]][row_index,][3]){
-      #       cross.region<-append(cross.region,matches[[1]][row_index,][2])
-      #       cross.region<-append(cross.region,matches[[1]][row_index,][3])
-      #     }
-      #   }
-      # }
-      #for(k in setdiff(names(x)[x<=thereshod],cross.region)){
       for(k in setdiff(result[result$total_length<thereshod1,]$cluster,cross.region)){
         #print(k)
         if(k==1){
@@ -518,18 +440,6 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
           b<-which(endcluster1$cluster==j & endcluster1$query_chr==chr_child)
           if(min(b)<min(a) & max(b)>max(a)){
             cat(k,j,"\n")
-            # if(length(a)!=1){
-            #   if(unique(endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$orient)=='-' & unique(diff(a))==1){
-            #     endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$ref_pos<-(min(endcluster1[endcluster1$cluster==k,]$ref_start)+max(endcluster1[endcluster1$cluster==k,]$ref_end))/2
-            #     endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$ref_start<-min(endcluster1[endcluster1$cluster==k,]$ref_start)
-            #     endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$ref_end<-max(endcluster1[endcluster1$cluster==k,]$ref_end)
-            #     minval=min(pmin(endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$query_end,endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$query_start))
-            #     maxval=max(pmax(endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$query_end,endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$query_start))
-            #     endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$query_start<-minval
-            #     endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$query_end<-maxval
-            #     endcluster1[endcluster1$cluster==k & endcluster1$query_chr==chr_child,]$query_pos<-(minval+maxval)/2
-            #   }
-            # }
             endcluster1[(which(endcluster1$cluster==k & endcluster1$query_chr==chr_child)),]$cluster<-j
             endcluster1<-distinct(endcluster1)
             break
@@ -538,37 +448,16 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
         }
         
       }
-      # init<-100
-      # ll<-rle(endcluster1$cluster)
-      # for(l in unique(ll$values)){
-      #   if(sum(ll$values==l)!=1){ ##如果某个cluster被其他cluster分隔了，就分开为不同的cluster
-      #     for (b in which(ll$values==l)){
-      #       endcluster1[(sum(ll$lengths[1:(b-1)])+1):(sum(ll$lengths[1:(b-1)])+ll$lengths[b]),]$cluster<-as.character(as.numeric(l)+init)
-      #       init<-init+1
-      #     }
-      #     
-      #   }
-      # }
-      
       
       cal_len<-endcluster1[endcluster1$query_chr==chr_child,]
       cal_len$len<-cal_len$ref_end-cal_len$ref_start
       result <- cal_len %>%
         group_by(cluster) %>%
         summarise(total_length = sum(len))
-      
-      #x=table(endcluster1[endcluster1$query_chr==chr_child,]$cluster)
-      #thereshod<-quantile(sort(as.vector(x)),0.8)/5
-      #if((thereshod)<5){ ## 说明比对数较少eg，1  10  11   2   3   4   5   6   7   8   9 
-      # 390   1   2   1   2 838   1   1   2   1   4 
-      #thereshod=5 ## 跨物种的时候选5 因为比对很碎
-      # thereshod=2 ## 非跨物种的时候选2 因为比对本身很少
-      #}
+
       rm("delsytenic")
       rm("dupli")
-      #for(k in names(x)[x<thereshod]){
       for(k in result[result$total_length<thereshod1,]$cluster){
-        #print(k)
         if(k==1){
           next
         }
@@ -615,13 +504,6 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
             endcluster1<-endcluster1[-idd,]
           }
         }
-        
-        # if(endcluster1[min(idd)-1,]$orient=="-" & endcluster1[max(idd)+1,]$orient=="-" &(endcluster1[min(idd),]$query_end<=max(endcluster1[endcluster1$cluster==endcluster1[min(idd)-1,]$cluster,]$query_end))){
-        #   endcluster1[idd,]$cluster<-endcluster1[min(idd)-1,]$cluster
-        # }
-        # if(endcluster1[min(idd)-1,]$orient=="-" & endcluster1[max(idd)+1,]$orient=="-" &(endcluster1[min(idd),]$query_end<=max(endcluster1[endcluster1$cluster==endcluster1[max(idd)+1,]$cluster,]$query_end))){
-        #   endcluster1[idd,]$cluster<-endcluster1[max(idd)+1,]$cluster
-        # }
       }
     }
     
@@ -660,42 +542,6 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
     }
     if(!exists("dupli")){dupli<-"no"}
     
-    # for(k in unique(endcluster1[endcluster1$orient=='-',]$cluster)){
-    #   if(k==1){
-    #     next
-    #   }
-    #   a<-endcluster1[min(which(endcluster1$cluster==k))-1,]$cluster
-    #   print('start')
-    #   print(k)
-    #   print(a)
-    #   b<-endcluster1[max(which(endcluster1$cluster==k))+1,]$cluster
-    #   print(b)
-    #   if((!is.na(b)& length(b)!=0)  &  (!is.na(a) & length(a)!=0 ) ){
-    #     if(a==b){
-    #       
-    #     }
-    #   }
-    #   
-    #   #if(nrow(endcluster1[endcluster1$cluster==k,])!=0){endcluster1[min(which(endcluster1$cluster==k,)):max(which(endcluster1$cluster==k,)),"cluster"]=k}
-    # }
-    # for(k in unique(endcluster1[endcluster1$orient=='+',]$cluster)){
-    #   if(k==1){
-    #     next
-    #   }
-    #   a<-endcluster1[min(which(endcluster1$cluster==k))-1,]$cluster
-    #   print('start')
-    #   print(k)
-    #   print(a)
-    #   b<-endcluster1[max(which(endcluster1$cluster==k))+1,]$cluster
-    #   print(b)
-    #   if((!is.na(b)& length(b)!=0)  &  (!is.na(a) & length(a)!=0 ) ){
-    #     if(a==b){
-    #       endcluster1[(which(endcluster1$cluster==k)),]$cluster<-a
-    #     }
-    #   }
-    #   #if(nrow(endcluster1[endcluster1$cluster==k,])!=0){endcluster1[min(which(endcluster1$cluster==k,)):max(which(endcluster1$cluster==k,)),"cluster"]=k}
-    # }
-    
     ## 处理一下边缘的inversion：1用
     if(cluster.id==1){
       invdata<-endcluster1[endcluster1$orient=="-",]
@@ -713,8 +559,6 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
         }
       }
     }
-    
-    #dotplot_cluster(endcluster1)
   }
   
   testminus<-clusterbigminus(endcluster1,cluster.id)
@@ -723,7 +567,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
   pos_end<-pos_end[order(pos_end$ref_start),]
   ## 这里加一步重复区域提取
   if(nrow(endcluster1)!=1){
-    middledata<-duplication_extract(endcluster1,pos_end) ##对大片段之间的重复进行处理
+    middledata<-duplication_extract(endcluster1,pos_end) ##对大片段之间的重复进行处理--->> check
     pos_end<-middledata$pos_end
     
     if(exists("dupli")){
@@ -738,16 +582,8 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
   }
   
   
-  
-  
-  
-  
   reall<-merge(pos_end,chrpc,by=c("ref_chr","query_chr"))
   reall<-reall[order(reall$ref_start),]
-  
-  
-  
-  
   
   for(chr_child in unique(endcluster1$query_chr)){
     ## 第一行
@@ -809,17 +645,11 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
     }
     if(dim(chrchch)[1]>1){
       for(m in 2:dim(chrchch)[1]){
-        if(chrchch[m,]$ref_start<chrchch[m-1,]$ref_end){
-          chrchch[m,]$ref_start<-chrchch[m-1,]$ref_end
+        if((chrchch[m,]$`(names(which.max(table(orient))))` != '-') & (chrchch[m-1,]$`(names(which.max(table(orient))))` != '-') & (chrchch[m,]$ref_start < chrchch[m-1,]$ref_end)){
+          chrchch[m,]$ref_start <- chrchch[m-1,]$ref_end
         }
       }
-    }
-    
-    
-    
-    
-    
-    
+    } 
     
     if(length(unique(endcluster1$query_chr))!=1){
       if(min(which(reall$query_chr==chr_child))==1){
@@ -833,31 +663,10 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
     ## 如果大片段之间重叠较多，需要提出来
     
     if(cluster.id==0){
-      #note<-c()
-      # if(dim(chrchch)[1]!=1){
-      #   for(i in 1:(dim(chrchch)[1]-1)){
-      #     if(chrchch[i+1,]$ref_start<chrchch[i,]$ref_end & chrchch[i+1,]$ref_start>chrchch[i,]$ref_start){
-      #       intersectrefstart<-chrchch[i+1,]$ref_start
-      #       intersectrefend<-min(chrchch[c(i,i+1),]$ref_end)
-      #       if(nrow(endcluster1[endcluster1$query_chr==chr_child & endcluster1$ref_start>=intersectrefstart &endcluster1$ref_end<= intersectrefend,])!=0)
-      #       {
-      #         if(is.character(dupli)){
-      #           dupli<-clusterall(endcluster1[endcluster1$query_chr==chr_child & endcluster1$ref_start>=intersectrefstart &endcluster1$ref_end<= intersectrefend,])
-      #         }else{
-      #           dupli<-rbind(dupli,clusterall(endcluster1[endcluster1$query_chr==chr_child & endcluster1$ref_start>=intersectrefstart &endcluster1$ref_end<= intersectrefend,]))
-      #         }
-      #         note<-append(note,i)}
-      #     }
-      #   }
-      # }
       
       if(dim(chrchch)[1]!=1){
         for (i in 1:dim(chrchch)[1]){
-          # if(length(note)!=0){
-          #   if(i %in% note){
-          #     next
-          #   }
-          # }
+          if(((i != dim(chrchch)[1]) & (chrchch[i,]$`(names(which.max(table(orient))))` != '-') & (chrchch[i+1,]$`(names(which.max(table(orient))))` != '-')) | (i == dim(chrchch)[1])){
           ## 序列前后相同的情况
           ## ref还是原来的方法，query寻找最近的query
           nowvalue=chrchch$query_end[i]
@@ -909,7 +718,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
           }
           new_row <-rbind(new_row,xx)
         }
-        
+        }
       }
       else{
         if(dim(pos_end)[1]==1){
@@ -921,11 +730,11 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
         }
         
       }
-      
     }
     if(cluster.id==2){
       if(dim(chrchch)[1]!=1 & dim(chrchch)[1]>0){
         for (i in 2:dim(chrchch)[1]-1){
+          if(((i != dim(chrchch)[1]-1) & (chrchch[i,]$`(names(which.max(table(orient))))` != '-') & (chrchch[i+1,]$`(names(which.max(table(orient))))` != '-')) | (i == dim(chrchch)[1]-1)){
           ## 序列前后相同的情况
           
           ## ref还是原来的方法，query寻找最近的query
@@ -938,6 +747,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
           }
           colnames(xx)<-colnames(new_row)
           new_row <-rbind(new_row,xx)
+        }
         }
       }
     }
@@ -962,6 +772,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
       ## 3代表是大inversion
       if(dim(chrchch)[1]!=1){
         for (i in 2:dim(chrchch)[1]-1){
+          if(((i != dim(chrchch)[1]-1) & (chrchch[i,]$`(names(which.max(table(orient))))` != '-') & (chrchch[i+1,]$`(names(which.max(table(orient))))` != '-')) | (i == dim(chrchch)[1]-1)){
           ## 序列前后相同的情况
           if(as.numeric(chrchch$ref_end[i])==chrchch$ref_start[i+1]){
             xx=data.frame(ref_chr=chrchch$ref_chr[i],ref_start = as.numeric(chrchch$ref_end[i]), ref_end =as.numeric(chrchch$ref_start[i+1]),query_chr=chrchch$query_chr[i],query_start = as.numeric(chrchch$query_end[i+1]), query_end = as.numeric(chrchch$query_start[i]))
@@ -972,7 +783,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
           }
           colnames(xx)<-colnames(new_row)
           new_row <-rbind(new_row,xx)
-          
+        }
         }
         
       }
@@ -982,7 +793,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
       colnames(new_row)<-c("ref_chr","ref_start","ref_end","query_chr","query_start","query_end")
       
     }
-    assign(chr_child,new_row)
+    assign(chr_child,new_row)  ##这里就是分配每个染色体对应的比对
   }
   allchr.reverse<-do.call(rbind,mget(unique(endcluster1$query_chr)))
   pointer<-which(allchr.reverse$ref_start==1)[which(allchr.reverse$ref_start==1)!=1]
@@ -1009,8 +820,6 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
   }
   
 }
-
-
 
 #-------------------function7 将重复区域进行整合 ----------------------
 repeat.integrate<-function(data,repeatid){
@@ -1078,26 +887,6 @@ repeat.integrate<-function(data,repeatid){
                 
               }
             }
-            
-            
-            
-            # if(abs(max(data[x,]$ref_start)-min(data[x,]$ref_end))>10000 & length(unique(data[x,]$orient))!=2){
-            #   repeat_region<-append(repeat_region,min(x))
-            #   if(data[min(x),]$orient == data[max(x),]$orient){
-            #     data[min(x),]$ref_start<-min(data[x,]$ref_start)
-            #     data[min(x),]$ref_end<-max(data[x,]$ref_end)
-            #     data[min(x),]$query_start<-min(data[x,]$query_start)
-            #     data[min(x),]$query_end<-max(data[x,]$query_end)
-            #     data[x,]<-data[min(x),]
-            #   }
-            #   
-            # }
-            # if(abs(max(data[x,]$ref_start)-min(data[x,]$ref_end))<10000 & length(unique(data[x,]$orient))!=2){
-            #   if(max(data[x,]$ref_start)!=min(data[x,]$ref_end)){
-            #     data[min(x)+1,]$ref_start<- data[min(x),]$ref_end
-            #   }
-            #   
-            # }
           }
         }
         
@@ -1109,48 +898,6 @@ repeat.integrate<-function(data,repeatid){
     }
     data<-distinct(data)
   }
-  
-  # ir1que  <- IRanges(start = data$query_start, end = data$query_end)
-  # overlapsque<-findOverlaps(ir1que,ir1que)
-  # if(length(which(overlapsque@from!=overlapsque@to))!=0){
-  #   inte<-as.data.frame(overlapsque[which(overlapsque@from!=overlapsque@to)])
-  #   if(exists("inte")){
-  #     df_sorted <- t(apply(inte, 1, function(x) sort(x)))
-  #     unique_df <- unique(df_sorted)
-  #     inte <- as.data.frame(unique_df)
-  #     for(j in 1:dim(inte)[1]){
-  #       a<-c()
-  #       a<-append(a,inte[j,1])
-  #       a<-append(a,inte[j,2])
-  #       for(k in 1:dim(inte)[1]){
-  #         if(inte[k,1] %in% ((min(a)):(max(a)))){
-  #           a<-unique(append(a,inte[k,1]))
-  #         }
-  #         if(inte[k,2] %in% ((min(a)):(max(a)))){
-  #           a<-unique(append(a,inte[k,2]))
-  #         }
-  #       }
-  #       x<-a
-  #       if(abs(max(data[x,]$query_start)-min(data[x,]$query_end))>10000){
-  #         #repeat_region<-append(repeat_region,min(x))
-  #         data[min(x),]$ref_start<-min(data[x,]$ref_start)
-  #         data[min(x),]$ref_end<-max(data[x,]$ref_end)
-  #         data[min(x),]$query_start<-min(data[x,]$query_start)
-  #         data[min(x),]$query_end<-max(data[x,]$query_end)
-  #         data[x,]<-data[min(x),]
-  #       }
-  #       if(abs(max(data[x,]$query_start)-min(data[x,]$query_end))<10000){
-  #         if(repeatid==2){
-  #           data[min(x)+1,]$query_end<- data[min(x),]$query_start
-  #         }
-  #         if(repeatid==1){
-  #           data[min(x)+1,]$query_start<- data[min(x),]$query_end
-  #         }
-  #        
-  #       }
-  #     }
-  #   }
-  # }
   
   ##处理一下query跨染色体的情况:
   if(repeatid==1){
@@ -1180,7 +927,6 @@ repeat.integrate<-function(data,repeatid){
       
     }
   }
-  
   
   data<-data[order(data$ref_start),]
   data<-distinct(data)
@@ -1234,78 +980,6 @@ endfilter<-function(all,chrid,chr_child){
     data[data$anno=="DUP" & (data$reflen<10000 | data$querylen<10000),]$anno<-"SV_DUP"
   }
   
-  
-  # ##去掉端粒
-  # teloquery<-result_chantelo[result_chantelo$chr==chr_child,]
-  # m<-teloquery[teloquery$id=="end",]
-  # n<-teloquery[teloquery$id=="first",]
-  # if(nrow(m)!=0){ ##说明是端粒末端
-  #   data[nrow(data),6]<-m$query_start
-  # }
-  # if(nrow(n)!=0){
-  #   data[1,5]<-n$query_end
-  # }
-  # teloref<-result_hmtelo[result_hmtelo$chr==chrid,]
-  # m<-teloref[teloref$id=="end",]
-  # n<-teloref[teloref$id=="first",]
-  # if(nrow(m)!=0){ ##说明是端粒末端
-  #   data[nrow(data),3]<-m$ref_start
-  # }
-  # if(nrow(n)!=0){
-  #   data[1,2]<-n$ref_end
-  # }
-  # ####去掉着丝粒
-  # centroref<-result_hmcentr[result_hmcentr$chr==chrid,]
-  # centroquery<-result_chancentr[result_chancentr$chr==chr_child,]
-  # #data<-data[!((data$ref_start %in% (centroref$ref_start:centroref$ref_end)) & (data$ref_end %in% (centroref$ref_start:centroref$ref_end))),]
-  # #data<-data[!((data$query_start %in% (centroquery$query_start:centroquery$query_end)) & (data$query_end %in% (centroquery$query_start:centroquery$query_end))),]
-  # ir1ref <- IRanges(start = data$ref_start, end = data$ref_end)
-  # ir2 <- IRanges(start =centroref$ref_start , end =centroref$ref_end)
-  # overlapsref<-findOverlaps(ir1ref,ir2) ##我们的比对序列的参考基因组
-  # ir1que  <- IRanges(start = data$query_start, end = data$query_end)
-  # ir3 <- IRanges(start =centroquery$query_start , end =centroquery$query_end)
-  # overlapsquery<-findOverlaps(ir1que,ir3) ##我们的比对序列的参考基因组
-  # ref<-overlapsref@from
-  # que<-overlapsquery@from
-  # print(overlapsquery)
-  # data$note<-"a"
-  # ## 分为： 同一个 SDR的ref和query都与着丝粒有交集
-  # if(length(intersect(ref,que))!=0){
-  #   for(l in intersect(ref,que)){
-  #     ## 然后继续分，先看参考基因组
-  #     ## 1.如果位于着丝粒区域内
-  #     if(data[l,]$ref_start> centroref$ref_start & data[l,]$ref_end<centroref$ref_end)
-  #     {data$note[l]<-'del'}
-  #     ## 2.如果位于着丝粒区域外
-  #     if(data[l,]$ref_start< centroref$ref_start & data[l,]$ref_end>centroref$ref_end)
-  #     {data$note[l]<-'del'
-  #     data<-rbind(data,data[l,])
-  #     data<-rbind(data,data[l,])
-  #     data[dim(data)[1]-1,]$ref_end<-centroref$ref_start-1
-  #     data[dim(data)[1],]$ref_start<-centroref$ref_end+1
-  #     if(data[l,]$query_start< centroquery$query_start & data[l,]$query_end>centroquery$query_end){
-  #       ## ref和query都位于着丝粒区域外，包括了着丝粒区域
-  #       data[dim(data)[1]-1,]$query_end<-centroquery$query_start-1
-  #       data[dim(data)[1]-1,]$note<-"a"
-  #       data[dim(data)[1],]$query_start<-centroquery$query_end+1
-  #       data[dim(data)[1],]$note<-"a"
-  #     }
-  #     }
-  #   }
-  # }
-  # ## 分为： ref与着丝粒有交集
-  # setdiff(ref,que)
-  # ## 分为： query与着丝粒有交集
-  # setdiff(que,ref)
-  # 
-  # if(length(which(data$note=="del"))!=0){
-  #   data<-data[-which(data$note=="del"),]
-  # }
-  # 
-  # data<-data[order(data$ref_start),]
-  # data<-data[,-10]
-  # 
-  
   return(data)
 }
 
@@ -1338,15 +1012,6 @@ insertsmall<-function(endcluster2before,storesmall,orientid){
       }
       
     }
-    # else{
-    #   insertpos=data[1:orientlist$lengths[i],]
-    #   reverse_end<-reverse.region(insertpos,chrid,reverseid)
-    #   if(nrow(reverse_end$reverse)!=0){
-    #     storesmall<-rbind(storesmall,reverse_end$reverse[,colnames(storesmall)])
-    #     print(storesmall)
-    #   }
-    #   
-    # }
   }
   return(storesmall)
 }
@@ -1360,12 +1025,6 @@ smalltransf<-function(endcluster0){
     if(k==1){
       next
     }
-    # a<-max(endcluster0[endcluster0$cluster==k,]$ref_end)-centro[centro$chr==unique(endcluster0[endcluster0$cluster==k,]$ref_chr),]$ref_start
-    # b<-min(endcluster0[endcluster0$cluster==k,]$ref_start)-centro[centro$chr==unique(endcluster0[endcluster0$cluster==k,]$ref_chr),]$ref_start
-    # 
-    # if(abs(a)<500000 |abs(b)<500000){
-    #   next
-    # }
     if(max(endcluster0[endcluster0$cluster==k,]$ref_end)-min(endcluster0[endcluster0$cluster==k,]$ref_start)>2000000){
       next
     }
@@ -1771,4 +1430,3 @@ highdupregion<-function(pos.chr){
   }
   
 }
-
