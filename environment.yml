@@ -3,13 +3,9 @@ channels:
   - http://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
   - http://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda
   - http://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-  - http://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
-  - http://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
-  - http://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
   - http://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
   - http://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/fastai/
   - http://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
-  - http://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_gnu
@@ -93,6 +89,9 @@ dependencies:
   - pixman=0.40.0=h7f8727e_1
   - python=3.9.16=h7a1cb2a_2
   - r-base=4.2.1=h7880091_2
+  - r-dbscan
+  - r-data.table
+  - r-dplyr
   - readline=8.2=h5eee18b_0
   - rustybam=0.1.31=hc52b9a9_1
   - sed=4.8=h7b6447c_0
