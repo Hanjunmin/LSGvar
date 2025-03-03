@@ -237,7 +237,7 @@ inversion.extract<-function(endcluster1,chrid){
             file = "inversion_reverse.bed",
             quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
   # 3.find overlap by bedtools intersect
-  system("bedtools intersect -a inversion_reverse.bed -b endcluster1_forward.bed -wa -wb > overlap.bed")
+  system("bedtools intersect -a inversion_reverse.bed -b endcluster1_forward.bed -wa -wb -f 0.1 > overlap.bed")
   
   
   for (i in seq_len(nrow(inversion))) {
