@@ -6,14 +6,6 @@
 
 
 environment.yml
-+ R4.2.1 (IRanges, dbscan, data.table, dplyr)
-+ bedtools
-+ minimap2
-+ rustybam
-+ truvari(4.3.1)
-+ bcftools
-+ bgzip
-+ Python (Bio, subprocess, multiprocessing)
 Before using LSGvar, configure the corresponding environment first.
 ```shell
 conda env create -f environment.yml
@@ -26,6 +18,15 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 BiocManager::install("IRanges")
 ```
+Main packages and softwares used in LSGvar:
++ R4.2.1 (IRanges, dbscan, data.table, dplyr)
++ Python (Bio, subprocess, multiprocessing)
++ bedtools
++ minimap2
++ rustybam
++ truvari(4.3.1)
++ bcftools
++ bgzip
 ## WorkFlow
 
 
