@@ -10,11 +10,22 @@ environment.yml
 + bedtools
 + minimap2
 + rustybam
-+ truvari(4.2.1)
++ truvari(4.3.1)
 + bcftools
 + bgzip
 + Python (Bio, subprocess, multiprocessing)
-
+Before using LSGvar, configure the corresponding environment first.
+```shell
+conda env create -f environment.yml
+```
+Then you can activate it through
+```shell
+conda activate LSGvar
+R  ##install the IRanges package
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("IRanges")
+```
 ## WorkFlow
 
 
@@ -44,7 +55,7 @@ git clone https://github.com/Hanjunmin/LSGvar.git
 
 Please create a new empty folder to store the run results and navigate into that folder. Copy the `LSGvar/run.sh` script into this folder.
 
-Configure `config.json`: To start the run, three essential input files are required :`reference genome`， `aligned genome`, and the `artificial chromosome pairing file` (refer to examples for guidance). Additionally, the `centromere and telomere file` is optional (alignments in this region will be filtered out during structural variation computation)."
+Configure `config.json`: To start the run, three essential input files are required :`reference genome`， `query genome`, and the `artificial chromosome pairing file` (two columns (ref and query) seperated by tab. Refer to examples for guidance). Additionally, the `centromere and telomere files` are optional (alignments in these regions will be filtered out during structural variation computation)."
 
 
 
@@ -62,15 +73,13 @@ telome="/home/LSGvar/examples/T2Tdatabase/hm_teloend.tsv"
 Run the shell script (The current initial version of the code has not been updated to the Snakemake workflow yet.)
 
 ```shell
-bash run.sh 200000 300000 cts 40
+bash run.sh 200000 300000 cts
 ```
 
 Explanation for the following three parameters: The first two parameters are filtering criteria. The first one is the clustering parameter for filtering, where a smaller value results in a stricter filter (Recommended parameters：200000), capable of removing more segments. The second parameter (Recommended parameters：300000) is the desired deletion length for alignments, where a larger value enforces a stricter filter,the last one you can choose cts or ctn.
 
 '`cts`' indicates inputting telomere and centromere fragments from the reference genome for filtering.
 '`ctn`' indicates no input of telomere and centromere files. (If the reference genome is T2T-CHM13, refer to the examples/T2Tdatabase for telomere and centromere files).
-
-40 (the number of process in the step of CIGAR calculation)
 
 ### some other functions:
 If your input FASTA file is at the contig or scaffold level, you can utilize the '`contig_process.sh`' script to process the primary FASTA file (Correct the orientation and trim the misassembled contig.). The resulting FASTA files will be stored in a directory named '`genomedata`'. Then, you can update your config.json file with the '`hap1_path`'('`hap2_path`') parameter set accordingly(seqkit is required in this step).
