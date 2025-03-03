@@ -141,7 +141,8 @@ def process_cigar(line):
 a=time.time()
 with open(paf, 'r') as infile, open(args.o, 'w') as outfile:
 	write=outfile.write(f"id\tref_start\tquery_start\tlen\ttype\tref_seq\tquery_seq\tQUERYSTRAND\n")
-	with Pool(processes=int(args.p)) as pool:
+	##if there has many cigar records, the param p is necessary to accelerate this process, default 20.
+	with Pool(processes=20) as pool:
 		results = pool.map(process_cigar, infile)
 	b=time.time()
 print(f"Processing time: {(b-a)/60:.2f} minutes")
