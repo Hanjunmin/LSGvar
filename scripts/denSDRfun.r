@@ -703,7 +703,8 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
               next
             }
             if(i==dim(reall)[1]){
-              xx=data.frame(ref_chr=chrchch$ref_chr[i],ref_start = as.numeric(chrchch$ref_end[i]), ref_end = chrchch$ref_len[i],query_chr=chrchch$query_chr[i],query_start = as.numeric(chrchch$query_end[i]), query_end = queendval)
+              xx=data.frame(ref_chr=chrchch$ref_chr[i],ref_start = as.numeric(chrchch$ref_end[i]), ref_end = chrchch$ref_len[i],query_chr=chrchch$query_chr[i],query_start = as.numeric(max(chrchch$query_end)), query_end = chrchch$query_len[i])
+
             }else if(i==dim(chrchch)[1]){
               xx<-data.frame()
             }
