@@ -1,95 +1,89 @@
-# LSGvar
-
-
-
-### Dependencies
-
-
-environment.yml
-Before using LSGvar, configure the corresponding environment first.
+# LSGvar -- Large-Scale Genomic VARiation caller
+LSGvar is a caller for comprehensive large-scale structural variants detection based on assemblies.
+## Configuration
+Install LSGvar through conda:
 ```shell
-conda env create -f environment.yml
-```
-Then you can activate it through
-```shell
-conda activate LSGvar
-R  ##install the IRanges package
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("IRanges")
-```
-Main packages and softwares used in LSGvar:
-+ R4.2.1 (IRanges, dbscan, data.table, dplyr)
-+ Python (Bio, subprocess, multiprocessing)
-+ bedtools
-+ minimap2
-+ rustybam
-+ truvari(4.3.1)
-+ bcftools
-+ bgzip
-## WorkFlow
-
-
-
-
-### data:
-
-**query**: Four primates (10 haplotypes): Orangutans (orangutan1:Sumatran orangutan,orangutan2:Bornean orangutan)、Chimpanzee、gorilla、bonobo
-
-*datasourse:[marbl/Primates: Complete assemblies of non-human primate genomes (github.com)](https://github.com/marbl/Primates?tab=readme-ov-file)*
-
-**reference**:T2T-CHM13v2.0
-
-*datasourse: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/analysis_set/chm13v2.0.fa.gz*
-
-(note：Due to extensive reversals in some of the primitive sequences of primates, processing has been carried out.)
-
-
-
-### Run scripts
-
-Download the SDR script through the following steps:
-
-```shell
+##Before using LSGvar, configure the corresponding environment first.
 git clone https://github.com/Hanjunmin/LSGvar.git
+cd LSGvar-main
+conda env create -f environment.yml 
 ```
-
-Please create a new empty folder to store the run results and navigate into that folder. Copy the `LSGvar/run.sh` script into this folder.
-
-Configure `config.json`: To start the run, three essential input files are required :`reference genome`， `query genome`, and the `artificial chromosome pairing file` (two columns (ref and query) seperated by tab. Refer to examples for guidance). Additionally, the `centromere and telomere files` are optional (alignments in these regions will be filtered out during structural variation computation)."
-
-
-
+*If you cannot use conda, you can obtain the environment dependencies by pulling the docker image:
 ```shell
-tool_path="/home/LSGvar/"
-ref_path="/home/chm13v2.0.fa"
-hap1_path="/home/query_h1.fa"
-hap2_path="/home/query_h2.fa"    ## or  hap2_path=""
-mappingtsvh1="/home/LSGvar/examples/chromosome_mapping.tsv"
-mappingtsvh2="/home/LSGvar/examples/chromosome_mapping.tsv"
-centro="/home/LSGvar/examples/T2Tdatabase/hm_centroend.tsv"
-telome="/home/LSGvar/examples/T2Tdatabase/hm_teloend.tsv"
+docker pull crpi-2hir7evq6wnxr5no.cn-shanghai.personal.cr.aliyuncs.com/feifeizhou/lsgvar:v0.1
 ```
 
-Run the shell script (The current initial version of the code has not been updated to the Snakemake workflow yet.)
-
+## Parameters
 ```shell
-bash run.sh 200000 300000 cts
+LSGVAR --help
+ _        _____    _____  __       __   _       ______
+| |      / ____|  / ____| \ \     / /  / \     |  __  \
+| |     | (___   | |  __   \ \   / /  / - \    | |__| |
+| |      \___ \  | | |_ \   \ \ / /  / /_\ \   |  __  /
+| |___   ____) | | |___) |   \ - /  / /___\ \  | |  \ \
+|_____| |_____/   \_____/     \_/  /_/     \_\ |_|   \_\
+
+Large-Scale Genetic VARiation caller
+
+
+Run command:
+LSGVAR -r ref.fa -q1 hap1.fa -q2 hap2.fa -p1 hap1.paf -p2 hap2.paf -cp1 PTR_hap1_pair.tsv -cp2 PTR_hap2_pair.tsv -cen chm13_cen.tsv -telo chm13_telo.tsv -m cts
+
+usage: LSGVAR [-h] -r REF -q1 HAP1 [-q2 HAP2] [-p1 PAF1] [-p2 PAF2] -cp1 PAIRS1 [-cp2 PAIRS2] [-c CLUSTER] [-d DELLENGTH] [-i INVCLUSTER] [-cen CENTROMERE] [-telo TELOMERE] -m
+              {ctn,cts} [-vt VARIANT] [--nosnv]
+
+options:
+  -h, --help            show this help message and exit
+
+Input Files:
+  -r REF, --ref REF     Reference genome for variants calling
+  -q1 HAP1, --hap1 HAP1
+                        One query genome (Which is one haplotype of one species genome)
+  -q2 HAP2, --hap2 HAP2
+                        Another query genome (Which is another haplotype of the species genome)
+  -p1 PAF1, --paf1 PAF1
+                        Alignment of hap1 (Which contains the CIGAR infomation)
+  -p2 PAF2, --paf2 PAF2
+                        Alignment for hap2 (Which contains the CIGAR infomation)
+  -cp1 PAIRS1, --pairs1 PAIRS1
+                        Chromsome pairs of query genome (hap1) and reference
+  -cp2 PAIRS2, --pairs2 PAIRS2
+                        Chromsome pairs of query genome (hap2) and reference
+  -c CLUSTER, --cluster CLUSTER
+                        Clustering parameter for filtering, where a smaller value results in a stricter filter [200000]
+  -d DELLENGTH, --dellength DELLENGTH
+                        A desired deletion length for alignments, where a larger value enforces a stricter filter [300000]
+  -i INVCLUSTER, --invcluster INVCLUSTER
+                        Clustering parameter for inversion calling [700000]
+  -cen CENTROMERE, --centromere CENTROMERE
+                        A centromere file which is used to filter out the alignment of complex regions that may not be well aligned [False]
+  -telo TELOMERE, --telomere TELOMERE
+                        A telomere file which is used to filter out the alignment of complex regions that may not be well aligned [False]
+  -m {ctn,cts}, --mode {ctn,cts}
+                        Analysis mode: ctn (do not remove centromere and telomere alignments) or cts (remove) [ctn]
+
+Additional arguments:
+  -vt VARIANT, --variant VARIANT
+                        Comma-separated variant types to generate final result (default: all). Options: snv, ins, del, inv, trans, sdr, dup, highdup
+  --nosnv               Params for skipping SNV/Indel identification and merge
 ```
 
-Explanation for the following three parameters: The first two parameters are filtering criteria. The first one is the clustering parameter for filtering, where a smaller value results in a stricter filter (Recommended parameters：200000), capable of removing more segments. The second parameter (Recommended parameters：300000) is the desired deletion length for alignments, where a larger value enforces a stricter filter,the last one you can choose cts or ctn.
+## Usage
+The test data is in the test/, and here are three sample genomic data, namely the chromosome 1 of chimpanzees (two haplotypes) and human (chr1.ptr.hap1.fa, chr1.ptr.hap2.fa and chr1.chm13.fa), as well as the centromere, telomere annotation data of T2T-CHM13, and one homologous chromosome pair file.
+```shell
+##After configuring LSGvar, you can create a new working folder in any path
+mkdir LSGvar_work && cd LSGvar_work
+##Activate the environment
+conda activate LSGvar
+##Then use the command to start SV identification
+LSGVAR -r ${Tool_dir}/test/chr1.chm13.fa -q1 ${Tool_dir}/test/chr1.ptr.hap1.fa -q2 ${Tool_dir}/test/chr1.ptr.hap2.fa -cp1 ${Tool_dir}/test/PTR_hap1_pair.tsv -cp2 ${Tool_dir}/test/PTR_hap2_pair.tsv -cen ${Tool_dir}/test/chm13_cen.tsv -telo ${Tool_dir}/test/chm13_telo.tsv -m cts
+```
 
-'`cts`' indicates inputting telomere and centromere fragments from the reference genome for filtering.
-'`ctn`' indicates no input of telomere and centromere files. (If the reference genome is T2T-CHM13, refer to the examples/T2Tdatabase for telomere and centromere files).
+## SV-annotation：
 
-### some other functions:
-If your input FASTA file is at the contig or scaffold level, you can utilize the '`contig_process.sh`' script to process the primary FASTA file (Correct the orientation and trim the misassembled contig.). The resulting FASTA files will be stored in a directory named '`genomedata`'. Then, you can update your config.json file with the '`hap1_path`'('`hap2_path`') parameter set accordingly(seqkit is required in this step).
+The final result can be found in `${work_dir}/results`.
 
-### SV-annotation：
-
-The final result can be found in `/results`.
-
-**LSGvarend1(2).bed**:
+**LSGvarhap1(2).bed**:
 
 |Label     |annotation                                                |
 | ----------------- | ------------------------------------------------------------ |
@@ -99,14 +93,12 @@ The final result can be found in `/results`.
 | DUP           | Duplication                                              |
 | INV           | Inversion                                              |
 | SDR           | Structure Divergent Reigions                                         |
-| COMPLEX           | Complex regions                                              |
+| TRANS           | Transposition                                              |
 
-**h1(h2)cigarsdr.vcf**:
+**hap1(hap2)cigarsdr.vcf**:
 
 INS、DEL、SNV、INV
 
-**sortLSGvarall.vcf.gz**(h1+h2)
+**sortLSGvarall.vcf.gz**(hap1+hap2)
 
-**LSGvar.bed**(h1+h2)
-
-( The initial version may still have a few small issues, for reference.)
+**LSGvar.bed**(hap1+hap2)
