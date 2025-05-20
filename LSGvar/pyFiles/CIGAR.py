@@ -150,4 +150,4 @@ print(f"Processing time: {(b-a)/60:.2f} minutes")
 subprocess.run(f"rm query.bed", shell=True)
 subprocess.run(f"rm que.fa", shell=True)
 subprocess.run(f"rm ref.bed", shell=True)  
-subprocess.run(f"rm ref.fa", shell=True
+subprocess.run(f"rm ref.fa", shell=True)
