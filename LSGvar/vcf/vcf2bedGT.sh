@@ -50,30 +50,30 @@ fi
 mkdir -p results/integrate
 
 if $process_snv; then
-  paste <(less -S $file | grep 'SNV' | awk 'OFS="\t"{print $1,$2,$3,$2+1,"SNV",1,".",$10}' | less -S) \
+  paste <(less -S $file | grep 'SNV' | awk 'OFS="\t"{print $1,$2,$2+1,$3,"SNV",1,".",$10}' | less -S) \
         <(less -S $file | grep 'SNV' | awk -F'TIG_REGION=' '{print $2}' | less -S | awk -F',' '{print $1}') \
         > results/integrate/SNV.bed
 fi
 
 if $process_ins; then
-  paste <(less -S $file | grep 'INS' | awk 'OFS="\t"{print $1,$2,$3}') \
-        <(less -S $file | grep 'INS' | awk -F'[-\t]' 'OFS="\t"{print $2+1,"INS",$6,"."}' | less -S) \
+  paste <(less -S $file | grep 'INS' | awk 'OFS="\t"{print $1,$2,$2+1,$3}') \
+        <(less -S $file | grep 'INS' | awk -F'[-\t]' 'OFS="\t"{print "INS",$6,"."}' | less -S) \
         <(less -S $file | grep 'INS' | cut -f10) \
         <(less -S $file | grep 'INS' | awk -F'TIG_REGION=' '{print $2}' | less -S | awk -F',' '{print $1}') \
         > results/integrate/INS.bed
 fi
 
 if $process_del; then
-  paste <(less -S $file | grep 'DEL' | awk 'OFS="\t"{print $1,$2,$3}') \
-        <(less -S $file | grep 'DEL' | awk -F'[-\t]' 'OFS="\t"{print $2+$6,"DEL",$6,"."}' | less -S) \
+  paste <(less -S $file | grep 'DEL' | awk 'OFS="\t"{print $1,$2,$2+$6,$3}') \
+        <(less -S $file | grep 'DEL' | awk -F'[-\t]' 'OFS="\t"{print "DEL",$6,"."}' | less -S) \
         <(less -S $file | grep 'DEL' | cut -f10) \
         <(less -S $file | grep 'DEL' | awk -F'TIG_REGION=' '{print $2}' | less -S | awk -F',' '{print $1}') \
         > results/integrate/DEL.bed
 fi
 
 if $process_inv; then
-  paste <(less -S $file | grep 'INV' | awk 'OFS="\t"{print $1,$2,$3}') \
-        <(less -S $file | grep 'INV' | awk -F'[-\t]' 'OFS="\t"{print $2+$6,"INV",$6,"."}' | less -S) \
+  paste <(less -S $file | grep 'INV' | awk 'OFS="\t"{print $1,$2,$2+$6,$3}') \
+        <(less -S $file | grep 'INV' | awk -F'[-\t]' 'OFS="\t"{print "INV",$6,"."}' | less -S) \
         <(less -S $file | grep 'INV' | cut -f10) \
         <(less -S $file | grep 'INV' | awk -F'TIG_REGION=' '{print $2}' | less -S | awk -F',' '{print $1}') \
         > results/integrate/INV.bed
