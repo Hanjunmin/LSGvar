@@ -11,7 +11,7 @@ dependencies:
   - _openmp_mutex=4.5=2_gnu
   - _r-mutex=1.0.0=anacondar_1
   - _sysroot_linux-64_curr_repodata_hack=3=haa98f57_10
-  - bcftools=1.20
+  - bcftools
   - bedtools=2.31.1=hf5e1c6e_1
   - binutils_impl_linux-64=2.38=h2a08ee3_1
   - bwidget=1.9.16=h9eba36c_0
@@ -19,7 +19,7 @@ dependencies:
   - c-ares=1.19.1=h5eee18b_0
   - ca-certificates=2024.3.11=h06a4308_0
   - cairo=1.16.0=hb05425b_5
-  - curl=7.26.0=1
+  - curl
   - expat=2.6.2=h6a678d5_0
   - font-ttf-dejavu-sans-mono=2.37=hd3eb1b0_0
   - font-ttf-inconsolata=2.001=hcb22688_0
@@ -97,7 +97,7 @@ dependencies:
   - bioconductor-iranges
   - readline=8.2=h5eee18b_0
   - rustybam=0.1.31=hc52b9a9_1
-  - samtools=1.6
+  - samtools
   - sed=4.8=h7b6447c_0
   - setuptools=68.2.2=py39h06a4308_0
   - sqlite=3.41.2=h5eee18b_0
