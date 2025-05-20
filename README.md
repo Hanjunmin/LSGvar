@@ -69,14 +69,23 @@ Additional arguments:
 ```
 
 ## Usage
-The test data is in the test/, and here are three sample genomic data, namely the chromosome 1 of chimpanzees (two haplotypes) and human (chr1.ptr.hap1.fa, chr1.ptr.hap2.fa and chr1.chm13.fa), as well as the centromere, telomere annotation data of T2T-CHM13, and one homologous chromosome pair file.
+The test data is in the ${Tool_dir}/examples/, and genome/ contains three zipped sample genomic data, namely the chromosome 21 of chimpanzees (two haplotypes) and human (chr21.ptr.hap1.fa.gz, chr21.ptr.hap2.fa.gz and chr21.chm13.fa.gz), data/ contains the centromere, telomere annotation data of T2T-CHM13, and one homologous chromosome pair file, the align/ folder contains two paf files for aligning the query genome to the reference genome.
 ```shell
 ##After configuring LSGvar, you can create a new working folder in any path
 mkdir LSGvar_work && cd LSGvar_work
 ##Activate the environment
 conda activate LSGvar
+##If you want to test this tool, change to the test genome directory and unzip them
+cd ${Tool_dir}/examples/genome
+gunzip chr21.chm13.fa.gz && gunzip chr21.ptr.hap1.fa.gz && gunzip chr21.ptr.hap2.fa.gz
 ##Then use the command to start SV identification
-LSGVAR -r ${Tool_dir}/test/chr1.chm13.fa -q1 ${Tool_dir}/test/chr1.ptr.hap1.fa -q2 ${Tool_dir}/test/chr1.ptr.hap2.fa -cp1 ${Tool_dir}/test/PTR_hap1_pair.tsv -cp2 ${Tool_dir}/test/PTR_hap2_pair.tsv -cen ${Tool_dir}/test/chm13_cen.tsv -telo ${Tool_dir}/test/chm13_telo.tsv -m cts
+cd LSGvar_work
+
+##If you don't have the alignment paf file, just provide the fasta path
+LSGVAR -r ${Tool_dir}/examples/genome/chr21.chm13.fa -q1 ${Tool_dir}/examples/genome/chr21.ptr.hap1.fa -q2 ${Tool_dir}/examples/genome/chr21.ptr.hap2.fa -cp1 ${Tool_dir}/examples/data/PTR_hap1_pairs.tsv -cp2 ${Tool_dir}/examples/data/PTR_hap2_pairs.tsv -cen ${Tool_dir}/examples/data/chm13_cen.tsv -telo ${Tool_dir}/examples/data/chm13_telo.tsv -m cts
+
+##If you already have the paf file, use the -p1 (-p2) parameters
+LSGVAR -r ${Tool_dir}/examples/genome/chr21.chm13.fa -q1 ${Tool_dir}/examples/genome/chr21.ptr.hap1.fa -q2 ${Tool_dir}/examples/genome/chr21.ptr.hap2.fa -p1 ${Tool_dir}/examples/align/align_hap1.paf -p2 ${Tool_dir}/examples/align/align_hap2.paf -cp1 ${Tool_dir}/examples/data/PTR_hap1_pairs.tsv -cp2 ${Tool_dir}/examples/data/PTR_hap2_pairs.tsv -cen ${Tool_dir}/examples/data/chm13_cen.tsv -telo ${Tool_dir}/examples/data/chm13_telo.tsv -m cts
 ```
 
 ## SV-annotation：
@@ -93,7 +102,7 @@ The final result can be found in `${work_dir}/results`.
 | DUP           | Duplication                                              |
 | INV           | Inversion                                              |
 | SDR           | Structure Divergent Reigions                                         |
-| TRANS           | Transposition                                              |
+| TRANS           | Translocation                                              |
 
 **hap1(hap2)cigarsdr.vcf**:
 
