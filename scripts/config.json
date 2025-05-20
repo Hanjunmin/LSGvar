@@ -1,7 +1,0 @@
-{
-  "prefix": "QUE",
-  "assembly": "/home/jmhan/SDR/run_bonobo/genomedata/query_h1.fa",
-  "intervals": "",
-  "trf_path": "module load trf && trf",
-  "samtools_path": "module load samtools && samtools"
-}
