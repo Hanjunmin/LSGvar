@@ -173,7 +173,7 @@ for(chrid in sorted_chrnames){
   if(length(aftertans$tran)!=0){
     smalltrans<-rbind(smalltrans,aftertans$tran)
   }
-  if(!isEmpty(aftertans$tran)){
+  if(!is.null(aftertans$tran) && !isEmpty(aftertans$tran)){
     inversion<-rbind(inversion,aftertans$tranbefore[aftertans$tranbefore$orient=="-",colnames(inversion)])
     transdup<-transduplication_extract(endcluster0,aftertans$tran)
     if(nrow(transdup)!=0){
