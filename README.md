@@ -3,14 +3,20 @@ LSGvar is a caller for comprehensive large-scale structural variants detection b
 ## Configuration
 Install LSGvar through conda:
 ```shell
-##Before using LSGvar, configure the corresponding environment first.
+##Before using LSGvar, configure the corresponding environment first. You can build a new env before running.
 git clone https://github.com/Hanjunmin/LSGvar.git
 cd LSGvar-main
 conda env create -f environment.yml 
 ```
-*If you cannot use conda, you can obtain the environment dependencies by pulling the docker image:
+*If you cannot use conda, you can obtain the environment dependencies by pulling the docker or singularity image:
 ```shell
 docker pull crpi-2hir7evq6wnxr5no.cn-shanghai.personal.cr.aliyuncs.com/feifeizhou/lsgvar:v0.1
+##then enter this container like this:
+docker run -it -v $(pwd):/LSGVAR lsgvar:v0.1
+
+singularity pull --arch amd64 library://feifeizhou/tool/lsgvar:v0.1
+##The tool is at /LSGVAR/main/LSGVAR path under the container, then you can use it like this:
+singularity exec lsgvar_v0.1.sif /LSGVAR/main/LSGVAR -r ref.fa -q1 query1.fa -cp1 pair1.tsv -m ctn
 ```
 
 ## Parameters
@@ -69,7 +75,10 @@ Additional arguments:
 ```
 
 ## Usage
-The test data is in the ${Tool_dir}/examples/, and genome/ contains three zipped sample genomic data, namely the chromosome 21 of chimpanzees (two haplotypes) and human (chr21.ptr.hap1.fa.gz, chr21.ptr.hap2.fa.gz and chr21.chm13.fa.gz), data/ contains the centromere, telomere annotation data of T2T-CHM13, and one homologous chromosome pair file, the align/ folder contains two paf files for aligning the query genome to the reference genome.
+The test data is in the ${Tool_dir}/examples/
+the genome/ folder contains three zipped sample genomic data, namely the chromosome 21 of chimpanzees (two haplotypes) and human (chr21.ptr.hap1.fa.gz, chr21.ptr.hap2.fa.gz and chr21.chm13.fa.gz)
+the data/ folder contains the centromere, telomere annotation data of T2T-CHM13, and one homologous chromosome pair file
+the align/ folder contains two paf files for aligning the query genome to the reference genome.
 ```shell
 ##After configuring LSGvar, you can create a new working folder in any path
 mkdir LSGvar_work && cd LSGvar_work
