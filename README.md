@@ -74,11 +74,20 @@ Additional arguments:
   --nosnv               Params for skipping SNV/Indel identification and merge
 ```
 
-## Usage
-The test data is in the ${Tool_dir}/examples/
-the genome/ folder contains three zipped sample genomic data, namely the chromosome 21 of chimpanzees (two haplotypes) and human (chr21.ptr.hap1.fa.gz, chr21.ptr.hap2.fa.gz and chr21.chm13.fa.gz)
-the data/ folder contains the centromere, telomere annotation data of T2T-CHM13, and one homologous chromosome pair file
-the align/ folder contains two paf files for aligning the query genome to the reference genome.
+## Usage  
+The test data is in ``${Tool_dir}/examples/``  
+
+The ``genome/`` folder contains three zipped sample genomic data, namely the chromosome 21 of chimpanzees (two haplotypes) and human:  
+- ``chr21.ptr.hap1.fa.gz``  
+- ``chr21.ptr.hap2.fa.gz``  
+- ``chr21.chm13.fa.gz``  
+
+The ``data/`` folder contains:  
+- Centromere and telomere annotation data of T2T-CHM13  
+- Homologous chromosome pair files  
+
+The ``align/`` folder contains two PAF files for aligning the query genome to the reference genome.  
+
 ```shell
 ##After configuring LSGvar, you can create a new working folder in any path
 mkdir LSGvar_work && cd LSGvar_work
