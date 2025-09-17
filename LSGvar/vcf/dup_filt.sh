@@ -30,6 +30,14 @@ else
     cut -f 2-9 cigartestin.txt > "$out"
 fi
 
-rm -f refpaf.region mergedup.txt cigartestin.txt cigartestin.bed overlaps.txt overlaps_filt.txt del.txt duplicates.txt intersect.txt
-rm *_del.txt
-rm *_frequencies.txt
+find . -maxdepth 1 -type f \( -name "refpaf.region" \
+                             -o -name "mergedup.txt" \
+                             -o -name "cigartestin.txt" \
+                             -o -name "cigartestin.bed" \
+                             -o -name "overlaps.txt" \
+                             -o -name "overlaps_filt.txt" \
+                             -o -name "del.txt" \
+                             -o -name "duplicates.txt" \
+                             -o -name "intersect.txt" \
+                             -o -name "*_del.txt" \
+                             -o -name "*_counts.txt" \) -delete
