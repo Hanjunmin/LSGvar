@@ -518,8 +518,9 @@ for(chrid in sorted_chrnames){
   storehighdup_sdr<-storehighdup_sdr[storehighdup_sdr$ref_chr!=0,]
   all<-rbind(store,inversion[-1,],distinct(duplication[-1,]),smalltrans[-1,],storesmall,storehighdup_sdr,INV_INV)
   all<-all[order(all$ref_start),]
+  distance <- args[6]
   for (chr_child in unique(all$query_chr[all$query_chr!=0])){
-    assign(chr_child,endfilter(all[all$query_chr==chr_child,],chrid,chr_child))
+    assign(chr_child,endfilter(all[all$query_chr==chr_child,],chrid,chr_child,distance))
     
   }
   if(nrow(all)==0){
@@ -563,6 +564,13 @@ if(nrow(data[data$ref_start==0 & data$ref_end==0,])!=0){
 if(nrow(data[data$query_start==0 & data$query_end==0,])!=0){
   data<-data[!(data$query_start==0 & data$query_end==0),]
 }
+numeric_cols <- c("ref_start", "ref_end", "query_start", "query_end", "reflen", "querylen")
+#data[numeric_cols] <- lapply(data[numeric_cols], function(x) format(x, scientific = FALSE, trim = TRUE, , justify = "none"))
+data[numeric_cols] <- lapply(data[numeric_cols], function(x) {
+  x <- as.numeric(x)
+  if(any(is.na(x))) warning("NA appears in column！")
+  format(x, scientific = FALSE, trim = TRUE, digits = 22)
+})
 write.table(data, paste(args[4],chrid,"end.tsv",sep = ""), quote = FALSE, sep = "\t", row.names = FALSE)
 }
 })
