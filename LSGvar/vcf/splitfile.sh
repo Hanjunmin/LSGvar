@@ -2,7 +2,7 @@
 
 folder=$1  ## output folder
 input_vcf=$2  ## input vcf file
-variants=${3:-all}  ## variants type
+variants="all"  ## variants type
 
 mkdir -p "${folder}"
 
@@ -22,9 +22,6 @@ else
       ins) process_indel=true ;;
       del) process_indel=true ;;
       snv) process_snv=true ;;
-      *)
-        echo "Warning: unknown variant type '$v' ignored."
-        ;;
     esac
   done
 fi
@@ -57,9 +54,9 @@ if $process_inv; then
   }' count.vcf > SV.vcf
 
   if [ -f "SV.vcf.gz" ]; then rm "SV.vcf.gz"; fi
-  bgzip SV.vcf
-  bcftools sort SV.vcf.gz -o sortSV.vcf.gz
-  bcftools index -t sortSV.vcf.gz
+  bgzip SV.vcf > /dev/null 2>&1
+  bcftools sort SV.vcf.gz -o sortSV.vcf.gz > /dev/null 2>&1
+  bcftools index -t sortSV.vcf.gz > /dev/null 2>&1
 fi
 
 # indel
@@ -76,9 +73,9 @@ if $process_indel; then
   }' count.vcf > indel.vcf
 
   if [ -f "indel.vcf.gz" ]; then rm "indel.vcf.gz"; fi
-  bgzip indel.vcf
-  bcftools sort indel.vcf.gz -o sortindel.vcf.gz
-  bcftools index -t sortindel.vcf.gz
+  bgzip indel.vcf > /dev/null 2>&1
+  bcftools sort indel.vcf.gz -o sortindel.vcf.gz > /dev/null 2>&1
+  bcftools index -t sortindel.vcf.gz > /dev/null 2>&1
 fi
 
 # snv
@@ -95,7 +92,7 @@ if $process_snv; then
   }' count.vcf > snv.vcf
 
   if [ -f "snv.vcf.gz" ]; then rm "snv.vcf.gz"; fi
-  bgzip snv.vcf
-  bcftools sort snv.vcf.gz -o sortsnv.vcf.gz
-  bcftools index -t sortsnv.vcf.gz
+  bgzip snv.vcf > /dev/null 2>&1
+  bcftools sort snv.vcf.gz -o sortsnv.vcf.gz > /dev/null 2>&1
+  bcftools index -t sortsnv.vcf.gz > /dev/null 2>&1
 fi
