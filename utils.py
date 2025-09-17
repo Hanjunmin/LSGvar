@@ -1,8 +1,11 @@
 import os
+import glob
 import time
+import logging
 import subprocess
 from pathlib import Path
-import glob
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def run_minimap(ref_path, hap_path, hap_label, chrom_pair_file):
     """1. Whole genome alignments"""
@@ -19,20 +22,23 @@ def run_minimap(ref_path, hap_path, hap_label, chrom_pair_file):
         "-o", f"align_{hap_label}.paf"
     ]
     
-    print(f"1.Running minimap2 for {hap_label}...")
+    logging.info("0.Map")
+    logging.info(f"Running minimap2 for {hap_label}...")
     
     result = subprocess.run(cmd, check=True)
     
     if result.returncode == 0:
-        print(f"Minimap2 completed for {hap_label} at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
+        logging.info(f"Minimap2 completed for {hap_label}")
     
-    print(f"2.Filtering PAF for {hap_label}...")
+    logging.info(f"Selecting alignments for homologous chromosomes in {hap_label}...")
     process_paf(f"align_{hap_label}.paf",chrom_pair_file,hap_label)
 
 def process_paf(paf_file, chrom_pair_file, hap_label):
     """2. Filter extra alignments"""
     filter_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/pyFiles/one2multi_filter.py"
-    p_c_chrlen_file = f"{hap_label}_chrlen.txt"
+    middle_dir = Path("half")
+    middle_dir.mkdir(exist_ok=True)
+    p_c_chrlen_file = middle_dir/f"{hap_label}_chrlen.txt"
     output_file = f"align_{hap_label}.flt.paf"
     
     cmd = [
@@ -43,11 +49,10 @@ def process_paf(paf_file, chrom_pair_file, hap_label):
         "-2", "1"
     ]
     
-    print(f"2.Filtering PAF for {hap_label}...")
+    logging.info(f"Filtering PAF for {hap_label}...")
     
     with open(output_file, 'w') as f:
         result = subprocess.run(cmd, stdout=f, check=True)
-        print(f"Filter finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
     
     awk_cmd = [
         "awk", "{print $6,$7,$1,$2}",
@@ -60,11 +65,13 @@ def process_paf(paf_file, chrom_pair_file, hap_label):
 def process_filtering(hap_label, mode, cluster, dellength, centromere, telomere):
     """3. Filter centromere and telomere alignments"""
     nowdic = Path.cwd()
+    middle_dir = Path("half")
+    middle_dir.mkdir(exist_ok=True)
     
     saffire_dir = Path(f"saffire{hap_label}")
     saffire_dir.mkdir(exist_ok=True)
-    p_c_chrlen_file = nowdic/f"{hap_label}_chrlen.txt"
-    output_file = nowdic/f"{hap_label}_syntenic.tsv"
+    p_c_chrlen_file = middle_dir/f"{hap_label}_chrlen.txt"
+    output_file = middle_dir/f"{hap_label}_syntenic.tsv"
     
     # run scripts
     chaos_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/scripts/chaos_filt.r"
@@ -81,15 +88,12 @@ def process_filtering(hap_label, mode, cluster, dellength, centromere, telomere)
             str(mode)
         ]
         
-        print(f"3.Running chaos filter for {hap_label} in ctn mode...")
-        
-        #result = subprocess.run(cmd, check=True)
+        logging.info(f"Running chaos filter for {hap_label} in ctn mode...")
         result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"Chaos filter finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
         
     elif mode == "cts":
         if centromere is None or telomere is None:
-            print("Error: When using 'cts' mode, you must provide both --centromere and --telomere arguments.")
+            logging.error("Error: When using 'cts' mode, you must provide both --centromere and --telomere arguments.")
             sys.exit(1)
         cmd = [
             "Rscript", str(chaos_script),
@@ -103,21 +107,22 @@ def process_filtering(hap_label, mode, cluster, dellength, centromere, telomere)
             str(centromere), str(telomere)
         ]
         
-        print(f"3.Running chaos filter for {hap_label} in cts mode...")
-        
-        #result = subprocess.run(cmd, check=True)
+        logging.info(f"Running chaos filter for {hap_label} in cts mode...")
         result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"Chaos filter finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
-    
+
     cmd = f"awk 'BEGIN{{OFS=\"\\t\"}} {{print $6, $8, $9, ($8+$9)/2, $1, $3, $4, ($3+$4)/2, $5}}' align_{hap_label}.final.paf | sort -k1,1 -k2,2n > {output_file}"
     subprocess.run(cmd, shell=True, check=True)
 
-def run_cluster_and_call(ref_path, hap_path, hap_label, invcluster):
+def run_cluster_and_call(ref_path, hap_path, hap_label, invcluster, threads, chunk_size, distance):
     """4. Cluster and SV calling"""
     
     denSDR_dir = Path(f"denSDR{hap_label}")
     denSDR_dir.mkdir(exist_ok=True)
+    #dotplot_dir = Path(f"dotplot{hap_label}")
+    #dotplot_dir.mkdir(exist_ok=True)
     sdrall_file = denSDR_dir/"SDRall.txt"
+    middle_dir = Path("half")
+    middle_dir.mkdir(exist_ok=True)
     
     cluster_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/scripts/denSDR.r"
     fun_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/scripts/denSDRfun.r"
@@ -125,17 +130,17 @@ def run_cluster_and_call(ref_path, hap_path, hap_label, invcluster):
     cmd = [
         "Rscript", str(cluster_script),
         str(fun_script),
-        f"{hap_label}_syntenic.tsv",
-        f"{hap_label}_chrlen.txt",
+        middle_dir/f"{hap_label}_syntenic.tsv",
+        middle_dir/f"{hap_label}_chrlen.txt",
         f"{str(denSDR_dir)}/",
-        str(invcluster)
+        str(invcluster),
+        str(distance)
     ]
     
-    print(f"4.Running clustering for {hap_label}...")
-    
-    #result = subprocess.run(cmd, check=True)
+    logging.info(f"SV calling for {hap_label}...")
+
     result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print(f"{hap_label} clustering finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
+    logging.info(f"SV calling on {hap_label} finished...")
     
     cmd = [
         "cat", f"{denSDR_dir}/*end.tsv", ">", str(sdrall_file)
@@ -151,34 +156,41 @@ def run_cluster_and_call(ref_path, hap_path, hap_label, invcluster):
         "-i", str(sdrall_file),
         "-r", ref_path,
         "-q", hap_path,
-        "-o", str(denSDR_dir/"SDRall_final.txt")
+        "-o", str(denSDR_dir/"SDRall_final.txt"),
+        "-t", str(threads),
+        "-c", str(chunk_size),
+        "-p", f"align_{hap_label}.final.paf"
+        
     ]
     
     subprocess.run(cmd, check=True)
-    print(f"{hap_label} realign finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
+    logging.info(f"Inversion re-identification of {hap_label} finished")
+    #print(f"{hap_label} realign finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
 
 def run_cigar_processing(ref_path, hap_path, hap_label):
     """ 5.extract variationas from CIGAR """
     cigar_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/pyFiles/CIGAR.py"
     temp_dir = Path("temp")
     temp_dir.mkdir(exist_ok=True)
+    middle_dir = Path("half")
+    middle_dir.mkdir(exist_ok=True)
     
     cmd = [
         "python", str(cigar_script),
         "--r", ref_path,
         "--q", hap_path,
         "--paf", f"align_{hap_label}.final.paf",
-        "--o", f"{hap_label}cigar.txt"
+        "--o", middle_dir/f"{hap_label}cigar.txt"
     ]
     
-    print(f"5.Generating CIGAR for {hap_label}...")
+    logging.info(f"Small variants identification for {hap_label}...")
     
     subprocess.run(cmd, check=True)
     
-    output_file = f"{hap_label}cigarend.txt"
+    output_file = middle_dir/f"{hap_label}cigarend.txt"
     
     with open(output_file, 'w') as dest:
-        with open(f"{hap_label}cigar.txt", 'r') as src:
+        with open(os.path.join("half", f"{hap_label}cigar.txt"), 'r') as src:
             for line in src:
                 dest.write(line)
         
@@ -192,17 +204,19 @@ def run_cigar_processing(ref_path, hap_path, hap_label):
     ]
     
     subprocess.run(cmd, check=True)
-    print(f"CIGAR generated for {hap_label} finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
+    logging.info(f"Small variants identification for {hap_label} finished...")
+    #print(f"CIGAR generated for {hap_label} finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
 
 def run_dup_filtering(hap_label):
     """6. dup filter"""
     dup_filt_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/vcf/dup_filt.sh"
     filt_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/pyFiles/dup_filt.py"
-    
+    middle_dir = Path("half")
+    middle_dir.mkdir(exist_ok=True)
     paf_file = f"align_{hap_label}.final.paf"
-    cigar_end_file = f"{hap_label}cigarend.txt"
-    output_file = f"{hap_label}cigarout.txt"
-    
+    cigar_end_file = middle_dir/f"{hap_label}cigarend.txt"
+    output_file = middle_dir/f"{hap_label}cigarout.txt"
+
     cmd = [
         "bash", str(dup_filt_script),
         paf_file,
@@ -211,24 +225,22 @@ def run_dup_filtering(hap_label):
         filt_script
     ]
     
-    print(f"6.Running dup filter for {hap_label}...")
-    
+    logging.info("Filtering duplication...")
     subprocess.run(cmd, check=True)
-    print(f"Dup filter for {hap_label} finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
 
-
-def generate_vcf(ref_path, hap_path, hap_label, variant_type):
+def generate_vcf(ref_path, hap_path, hap_label):
     """7. Generate variation results -- vcf"""
     results_dir = Path(f"results")
     results_dir.mkdir(exist_ok=True)
-    
-    # 运行 cigar2vcf.sh
+
+    middle_dir = Path("half")
+    middle_dir.mkdir(exist_ok=True)
     cigar_to_vcf_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/vcf/cigar2vcf.sh"
     py_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/pyFiles/SDR_vcf.py"
-    cigar_out_file = f"{hap_label}cigarout.txt"
+    cigar_out_file = middle_dir/f"{hap_label}cigarout.txt"
     vcf_file = f"{results_dir}/{hap_label}cigarsdr.vcf"
     sdrall_final_file = f"denSDR{hap_label}/SDRall_final.txt"
-    cigarsdr_txt_file = f"{hap_label}cigarsdr.txt"
+    cigarsdr_txt_file = middle_dir/f"{hap_label}cigarsdr.txt"
     lsgvarend_bed_file = f"{results_dir}/LSGvar{hap_label}.bed"
  
     cmd = [
@@ -241,15 +253,15 @@ def generate_vcf(ref_path, hap_path, hap_label, variant_type):
         cigarsdr_txt_file,
         str(py_script),
         lsgvarend_bed_file,
-        variant_type
+        str("all")
     ]
     
-    print(f"7.Generating VCF for {hap_label}...")
+    
+    logging.info(f"Generating VCF of {hap_label}...")
     subprocess.run(cmd, check=True)
-    print(f"Generating VCF for {hap_label} finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
 
 
-def split_vcf(hap_label, variant_type):
+def split_vcf(hap_label):
     """8. split vcf"""
     split_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/vcf/splitfile.sh"
     hap_dir = Path(f"{hap_label}")
@@ -259,69 +271,54 @@ def split_vcf(hap_label, variant_type):
         "bash", str(split_script),
         f"{str(hap_dir)}/",
         f"results/{hap_label}cigarsdr.vcf",
-        variant_type
+        str("all")
     ]
-    
-    print(f"8.Splitting VCF for {hap_label}...")
-    
+
     subprocess.run(cmd, check=True)
-    print(f"Splitting VCF for {hap_label} finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}", flush=True)
 
-
-def integrate_results(ref_path, hap1_dir, hap2_dir, variant_type):
+def integrate_results(hap1_dir, hap2_dir, sample_name, max_distance, small_distance, similarity_threshold):
     """9. merge two haplotypes' variation"""
-    integrate_dir =  Path("results/integrate")
-    integrate_dir.mkdir(exist_ok=True)
-
-    cmd = f"less -S align_hap1.final.paf | awk 'BEGIN{{OFS=\"\\t\"}} {{print $6,$8,$9}}'| bedtools sort | bedtools merge -i - > results/integrate/hap1_paf.bed"
-    subprocess.run(cmd, shell=True, check=True)
+    phenotype_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/pyFiles/phenotype.py"
     
-    cmd = f"less -S align_hap2.final.paf | awk 'BEGIN{{OFS=\"\\t\"}} {{print $6,$8,$9}}'| bedtools sort | bedtools merge -i - > results/integrate/hap2_paf.bed"
-    subprocess.run(cmd, shell=True, check=True)
+    variant_type = "all"
+    variants = list(set(variant_type.split(',')))
+    output_vcf = f"sortLSGvar_{'_'.join(sorted(variants))}.vcf"
 
     cmd = [
-        "bedtools", "intersect",
-        "-a", f"{integrate_dir}/hap1_paf.bed",
-        "-b", f"{integrate_dir}/hap2_paf.bed",
-        "|", "bedtools", "sort",
-        ">", f"{integrate_dir}/h1_h2intersec.bed"
+        "python", str(phenotype_script),
+        "--output", f"results/{output_vcf}",
+        "--max_distance", str(max_distance),
+        "--small_distance", str(small_distance),
+        "--similarity_threshold", str(similarity_threshold),
+        "--sample_name", sample_name
     ]
     
-    subprocess.run(" ".join(cmd), shell=True, check=True)
-    
-    phenotype_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/vcf/phenotype.sh"
-    
-    cmd = [
-        "bash", str(phenotype_script),
-        hap1_dir,
-        hap2_dir,
-        ref_path,
-        variant_type
-    ]
-    
-    subprocess.run(cmd, check=True)
+    cmd_extended = False
+    if "snv" in variants or "all" in variants:
+        cmd.extend(["--hap1_snv", f"{hap1_dir}/sortsnv.vcf.gz"])
+        cmd.extend(["--hap2_snv", f"{hap2_dir}/sortsnv.vcf.gz"])
+        cmd_extended = True
+    if "ins" in variants or "del" in variants or "all" in variants:
+        cmd.extend(["--hap1_indel", f"{hap1_dir}/sortindel.vcf.gz"])
+        cmd.extend(["--hap2_indel", f"{hap2_dir}/sortindel.vcf.gz"])
+        cmd_extended = True
+    if "inv" in variants or "ins" in variants or "del" in variants or "all" in variants:
+        cmd.extend(["--hap1_sv", f"{hap1_dir}/sortSV.vcf.gz"])
+        cmd.extend(["--hap2_sv", f"{hap2_dir}/sortSV.vcf.gz"])
+        cmd_extended = True
+
+    if cmd_extended:
+        subprocess.run(cmd, check=True)
 
     vcf2bedgt_script = Path(os.path.dirname(os.path.abspath(__file__))) / "LSGvar/vcf/vcf2bedGT.sh"
     
     cmd = [
         "bash", str(vcf2bedgt_script),
-        f"results/sortLSGvarall.vcf.gz",
+        f"results/sortLSGvar_all.vcf",
         f"results/LSGvarhap1.bed",
         f"results/LSGvarhap2.bed",
-        f"results/LSGvar.bed",
-        variant_type
+        f"results/LSGvarall.bed"
     ]
     
     subprocess.run(cmd, check=True)
-    print(f"LSGvar finished at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
-
-def remove_temp_files():
-    current_dir = Path(".")
-    extensions = ('.txt', '.csv', '.fa', '.tsv')
-    
-    try:
-        for file in current_dir.glob('*'):
-            if file.suffix.lower() in extensions:
-                file.unlink()  # Remove the file
-    except Exception as e:
-        sys.exit(1)
+    logging.info("Complete!")
