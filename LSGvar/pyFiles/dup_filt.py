@@ -1,11 +1,11 @@
 #!/usr/local/bin/python
 # coding: iso-8859-1
 
+import sys
+import re
 import pandas as pd
 import numpy as np
 import multiprocessing
-import sys
-import re
 
 def process_group(group_key, df, duplicates, output_prefix):
     group_df = df[df['group_key'] == group_key].copy() 
@@ -43,44 +43,41 @@ def process_group(group_key, df, duplicates, output_prefix):
         group_df = group_df.drop(columns=['chromosome', 'start', 'end'], errors='ignore')
 
     except Exception as e:
-        print(f"Error processing group {group_key}: {e}")
+        logging.error(f"Error processing group {group_key}: {e}")
         return None
 
     unique_samples = group_df['col8'].nunique()
     if unique_samples <= 1:
         return None
 
-    frequencies = []
+    sample_counts = []
     for seq_name in group_df['col8'].unique():
         seq_df = group_df[group_df['col8'] == seq_name]
-        min_pos = seq_df['col6'].min()
-        max_pos = seq_df['col6'].max()
-        length = max_pos - min_pos
-        group_size = len(seq_df)
-        frequency = group_size / length if length > 0 else 0.0
-        frequencies.append((seq_name, frequency))
+        count = len(seq_df)
+        sample_counts.append((seq_name, count))
 
-    frequencies_file = f"{output_prefix}_{group_key.replace(' ', '_')}_frequencies.txt"
-    with open(frequencies_file, 'w') as f_freq:
-        for seq_name, frequency in sorted(frequencies, key=lambda x: x[1], reverse=True):
-            f_freq.write(f"{seq_name},{frequency:.10f}\n")
+    counts_file = f"{output_prefix}_{group_key.replace(' ', '_')}_counts.txt"
+    with open(counts_file, 'w') as f_counts:
+        for seq_name, count in sorted(sample_counts, key=lambda x: x[1], reverse=True):
+            f_counts.write(f"{seq_name},{count}\n")
 
-    frequencies_df = pd.read_csv(frequencies_file, sep=',', header=None, names=['sample', 'frequency'])
+    counts_df = pd.read_csv(counts_file, sep=',', header=None, names=['sample', 'count'])
+
     del_file = f"{output_prefix}_{group_key.replace(' ', '_')}_del.txt"
     with open(del_file, 'w') as f_del:
-        if (frequencies_df['frequency'] == 0).all():
+        if (counts_df['count'] == 0).all():
             return None
         else:
             try:
-                sample_del = frequencies_df.sort_values(by='frequency', ascending=True)['sample'].tolist()[1:]
-                for sample in sample_del:
+                samples_to_del = counts_df.sort_values(by='count', ascending=True)['sample'].tolist()[1:]
+                for sample in samples_to_del:
                     del_values = group_df[group_df['col8'] == sample]['col7'].tolist()
                     for val in del_values:
                         f_del.write(f"{val}\n")
             except Exception as e:
                 print(f"Error processing group {group_key}: {e}")
                 return None
-
+    
     return group_key
 
 if __name__ == '__main__':
