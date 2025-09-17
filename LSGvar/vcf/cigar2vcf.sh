@@ -1,4 +1,11 @@
 #!/bin/bash
+log() {
+    local level=$1
+    local message=$2
+    local timestamp=$(date "+%Y-%m-%d %H:%M:%S,%3N")
+
+    echo -e "${timestamp} - ${level} - ${message}"
+}
 
 # check params
 if [ $# -lt 8 ]; then
@@ -17,10 +24,9 @@ query_fasta=$5    # query genome
 SDR_output=$6     # sdr results
 python_script=$7  # scripts
 bed_output=$8     # bed file
-variant_type=${9:-"all"}  # merge all variants
+variant_type="all"  # merge all variants
 
 # VCF header
-echo "Creating VCF header..."
 rm -f vcf_header.txt
 touch vcf_header.txt
 echo -e "##fileformat=VCFv4.2" >>vcf_header.txt
@@ -46,44 +52,37 @@ echo -e "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">" >>vcf_h
 echo -e "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample" >>vcf_header.txt
 
 # Preprocess
-echo "Preprocessing input file..."
-paste $filein <(awk -F'[:-]' '{printf "%s\t%s\t%s\n", $2, $4, $1}' $filein) > addout.txt
+log "INFO" "Preprocessing input file..."
+paste "$filein" <(awk -F'[:-]' '{
+    ref_chrom = $1;
+    ref_start = $2;
+    split($3, tmp, "_");
+    query_chrom = substr($3, length(tmp[1]) + 2);  
+    query_start = $4;
+
+    print ref_chrom "\t" ref_start "\t" query_chrom "\t" query_start
+}' "$filein") > addout.txt
+
+
 awk -F'\t' 'NR>=2 {
-    switch($5) {
-        case "SNP_DEL":
-              printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2 - 1, $9 + $2 + $4 - 1, $10 + $3, $10 + $3, $1, $4, $5, $6, $7, $8
-            break
-        case "SNP_INS":
-                printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2 - 1, $9 + $2 - 1, $10 + $3, $10 + $3 + $4 - 1, $1, $4, $5, $6, $7, $8
-            break
-        case "INDEL_DEL":
-            printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2 - 1, $9 + $2 + $4 - 1, $10 + $3, $10 + $3, $1, $4, $5, $6, $7, $8
-            break
-        case "INDEL_INS":
-            printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2 - 1, $9 + $2 - 1, $10 + $3, $10 + $3 + $4 - 1, $1, $4, $5, $6, $7, $8
-            break
-        case "SNP":
-            printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $11, $9 + $2, $9 + $2 + $4 - 1, $10 + $3, $10 + $3 + $4 - 1, $1, $4, $5, $6, $7, $8
-            break
+    if ($5 == "SNP_DEL") {
+        printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $9, $10 + $2 - 1, $10 + $2 + $4 - 1, $11, $12 + $3, $12 + $3, $1, $4, $5, $6, $7, $8
+    } else if ($5 == "SNP_INS") {
+        printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $9, $10 + $2 - 1, $10 + $2 - 1, $11, $12 + $3 - 1, $12 + $3 + $4 -1, $1, $4, $5, $6, $7, $8
+    } else if ($5 == "INDEL_DEL") {
+        printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $9, $10 + $2 - 1, $10 + $2 + $4 - 1, $11, $12 + $3, $12 + $3, $1, $4, $5, $6, $7, $8
+    } else if ($5 == "INDEL_INS") {
+        printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $9, $10 + $2 - 1, $10 + $2 - 1, $11, $12 + $3, $12 + $3 + $4, $1, $4, $5, $6, $7, $8
+    } else if ($5 == "SNP") {
+        printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $9, $10 + $2, $10 + $2 + $4 - 1, $11, $12 + $3, $12 + $3 + $4 - 1, $1, $4, $5, $6, $7, $8
     }
 }' addout.txt > CIGARend.txt
-
 sed -i 's/SNP_DEL/DEL/g' CIGARend.txt
 sed -i 's/INDEL_DEL/DEL/g' CIGARend.txt
 sed -i 's/SNP_INS/INS/g' CIGARend.txt
 sed -i 's/INDEL_INS/INS/g' CIGARend.txt
 
 # Specific variants process
-process_snv=false
-process_ins=false
-process_del=false
-process_inv=false
-process_trans=false
-process_sdr=false
-process_dup=false
-process_highdup=false
-process_complex=false
-
 if [ "$variant_type" = "all" ]; then
   process_snv=true
   process_ins=true
@@ -94,37 +93,51 @@ if [ "$variant_type" = "all" ]; then
   process_dup=true
   process_highdup=true
   process_complex=true
-elif [ "$variant_type" = "snv" ]; then
-  process_snv=true
-elif [ "$variant_type" = "ins" ]; then
-  process_ins=true
-elif [ "$variant_type" = "del" ]; then
-  process_del=true
-elif [ "$variant_type" = "inv" ]; then
-  process_inv=true
-elif [ "$variant_type" = "trans" ]; then
-  process_trans=true
-elif [ "$variant_type" = "sdr" ]; then
-  process_sdr=true
-elif [ "$variant_type" = "dup" ]; then
-  process_dup=true
-elif [ "$variant_type" = "highdup" ]; then
-  process_highdup=true
-elif [ "$variant_type" = "complex" ]; then
-  process_complex=true
 else
-  echo "Unknown variant type: $variant_type"
-  echo "Valid types: snv, ins, del, inv, trans, sdr, dup, highdup, complex, all"
-  exit 1
+  IFS=',' read -ra types <<< "$variant_type"
+  
+  process_snv=false
+  process_ins=false
+  process_del=false
+  process_inv=false
+  process_trans=false
+  process_sdr=false
+  process_dup=false
+  process_highdup=false
+  process_complex=false
+
+  for type in "${types[@]}"; do
+    case "$type" in
+      snv)      process_snv=true ;;
+      ins)      process_ins=true ;;
+      del)      process_del=true ;;
+      inv)      process_inv=true ;;
+      trans)    process_trans=true ;;
+      sdr)      process_sdr=true ;;
+      dup)      process_dup=true ;;
+      highdup)  process_highdup=true ;;
+      complex)  process_complex=true ;;
+      *)
+        exit 1
+        ;;
+    esac
+  done
 fi
 
 # SNV
 if $process_snv; then
-  echo "Processing SNVs..."
-  awk -F'\t' '$8=="SNP"{print$0}' CIGARend.txt >oursnv.txt
+  log "INFO" "Processing SNVs..."
+  awk -F'\t' '$9=="SNP"{print$0}' CIGARend.txt >oursnv.txt
   file="oursnv.txt"
-  paste ${file} <(awk '{print $1 "-" $2 "-" $8 "-" $9 "-" $10}' ${file}) <(awk -F'\t' '{print "ID=" $1 "-" $2 "-" $8 "-" $9 "-" $10 ";" "SVTYPE=" $8 ";" "TIG_REGION=" $1 ":" $4 "-" $5 ","  $1 ":" $4 "-" $5 ";" "QUERY_STRAND=" $11 ","$11}' ${file}) <(awk -F'\t' '{print "GT" }' ${file}) <(awk -F'\t' '{print "1|0" }' ${file}) >testbe.txt
-  less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $12,$9,$10,".",".",$13,$14,$15}' >testchr1snvend.txt
+  awk -F'\t' -v OFS='\t' '{
+    id = "ID=" $1 "-" $2 "-" $9 "-" $10 "-" $11 ";"
+    sv_info = "SVTYPE=" $9 ";"
+    region = "TIG_REGION=" $4 ":" $5 "-" $6 "," $4 ":" $5 "-" $6 ";"
+    strand = "QUERY_STRAND=" $12 "," $12
+    
+    print $0, $1 "-" $2 "-" $9 "-" $10 "-" $11, id sv_info region strand, "GT", "1/0"
+  }' ${file} > testbe.txt
+  awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $13, $10, $11,".",".",$14,$15,$16}' testbe.txt >testchr1snvend.txt
   cat testchr1snvend.txt >endcigar.vcf
   sed 's/SNP/SNV/g' endcigar.vcf >end2cigar.vcf
   rm testchr1snvend.txt
@@ -132,8 +145,8 @@ fi
 
 # DEL, INS, INV
 if $process_del || $process_ins || $process_inv; then
-  echo "Processing structural variants..."
-  less -S $input_vcf | awk '$7 ~ "DEL" || $7 ~"INS" ||$7 ~"INV"{print $0}' | awk -F'\t' '($9!=0 || $10!=0){print $0}' >SDRend.txt
+  log "INFO" "Processing SVs..."
+  awk '$7 ~ "DEL" || $7 ~"INS" ||$7 ~"INV"{print $0}' $input_vcf | awk -F'\t' '($9!=0 || $10!=0){print $0}' >SDRend.txt
   sed -i 's\no\+\g' SDRend.txt
   sed -i 's/SDR_INV/INV/g' SDRend.txt
   sed -i 's/SV_INV/INV/g' SDRend.txt
@@ -147,38 +160,47 @@ fi
 
 # INS
 if $process_ins; then
-  echo "Processing insertions..."
-  awk -F'\t' '$8=="INS"{print$0}' CIGARend.txt >ourins.txt
+  log "INFO" "Processing insertions..."
+  awk -F'\t' '$9=="INS"{print$0}' CIGARend.txt >ourins.txt
   file="ourins.txt"
-  paste ${file} <(awk '{print $1 "-" $2 "-" $8 "-" $7}' ${file}) <(awk -F'\t' '{print "ID=" $1 "-" $2 "-" $8 "-" $7 ";" "SVTYPE=" $8 ";" "SVLEN=" $7 ";"  "TIG_REGION=" $1 ":" $4 "-" $5 ","  $1 ":" $4 "-" $5 ";" "QUERY_STRAND=" $11 ","$11}' ${file}) <(awk -F'\t' '{print "GT" }' ${file}) <(awk -F'\t' '{print "1|0" }' ${file}) >testbe.txt
-  less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $12,$9,$10,".",".",$13,$14,$15}' >testchr1insend.txt
+  awk -F'\t' -v OFS='\t' '{
+    id = $1 "-" $2 "-" $9 "-" $8;
+    info = "ID=" id ";SVTYPE=" $9 ";SVLEN=" $8 ";TIG_REGION=" $4 ":" $5 "-" $6 "," $4 ":" $5 "-" $6 ";QUERY_STRAND=" $12 "," $12;
+    print $0, id, info, "GT", "1/0"
+  }' ${file} > testbe.txt
+  awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $13, $10, $11,".",".",$14,$15,$16}' testbe.txt >testchr1insend.txt
+
   rm ourins.txt
   rm testbe.txt
-  cat <(less -S $SDR_output |awk 'index($3, "INS"){print$0}') testchr1insend.txt >ourinsend.txt
+  cat <(awk 'index($3, "INS"){print$0}' "$SDR_output") testchr1insend.txt >ourinsend.txt
   rm testchr1insend.txt
 fi
 
 # DEL
 if $process_del; then
-  echo "Processing deletions..."
-  awk -F'\t' '$8=="DEL"{print$0}' CIGARend.txt >ourdel.txt
+  log "INFO" "Processing deletions..."
+  awk -F'\t' '$9=="DEL"{print$0}' CIGARend.txt >ourdel.txt
   file="ourdel.txt"
-  paste ${file} <(awk '{print $1 "-" $2 "-" $8 "-" $7}' ${file}) <(awk -F'\t' '{print "ID=" $1 "-" $2 "-" $8 "-" $7 ";" "SVTYPE=" $8 ";" "SVLEN=" "-" $7 ";"  "TIG_REGION=" $1 ":" $4 "-" $5 ","  $1 ":" $4 "-" $5 ";" "QUERY_STRAND=" $11 ","$11}' ${file}) <(awk -F'\t' '{print "GT" }' ${file}) <(awk -F'\t' '{print "1|0" }' ${file}) >testbe.txt
-  less testbe.txt|awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $12,$9,$10,".",".",$13,$14,$15}' >testchr1delend.txt
+  awk -F'\t' -v OFS='\t' '{
+    id = $1 "-" $2 "-" $9 "-" $8;
+    info = "ID=" id ";SVTYPE=" $9 ";SVLEN=" "-" $8 ";TIG_REGION=" $4 ":" $5 "-" $6 "," $4 ":" $5 "-" $6 ";QUERY_STRAND=" $12 "," $12;
+    print $0, id, info, "GT", "1/0"
+  }' ${file} > testbe.txt
+  awk -F'\t' '{printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", $1, $2, $13, $10, $11,".",".",$14,$15,$16}' testbe.txt >testchr1delend.txt
   rm ourdel.txt
   rm testbe.txt
-  cat <(less -S $SDR_output |awk 'index($3, "DEL"){print$0}') testchr1delend.txt >ourdelend.txt
+  cat <(awk 'index($3, "DEL"){print$0}' "$SDR_output") testchr1delend.txt >ourdelend.txt
   rm testchr1delend.txt
 fi
 
 # INV
 if $process_inv; then
-  echo "Processing inversions..."
-  cat <(less -S $SDR_output |awk 'index($3, "INV"){print$0}') >ourinvend.txt
+  log "INFO" "Processing inversions..."
+  cat <(awk 'index($3, "INV"){print$0}' "$SDR_output") >ourinvend.txt
 fi
 
 # Merge
-echo "Merging results..."
+log "INFO" "Merge results..."
 > variants.vcf
 if $process_snv; then
   cat end2cigar.vcf >> variants.vcf
@@ -193,61 +215,66 @@ if $process_inv; then
   cat ourinvend.txt >> variants.vcf
 fi
 
-cat vcf_header.txt <(less -S variants.vcf) > $fileout
+cat vcf_header.txt variants.vcf > "$fileout"
 hap=$(basename "$filein" | cut -c 1-4)
 
 # Bed results
-echo "Creating BED files..."
+log "INFO" "Creating BED files..."
 > LSGvar.bed
-echo -e "#CHROM\tPOS\tID\tEND\tSVTYPE\tSVLEN\tHAP\tGT\tQUERY" > LSGvar.bed
+echo -e "#CHROM\tPOS\tEND\tID\tSVTYPE\tSVLEN\tHAP\tGT\tQUERY" > LSGvar.bed
 
 if $process_snv; then
-  paste <(less -S variants.vcf |grep 'SNV' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$3,$2+1,"SNV",1,hap,"1|."}' |less -S) <(less -S variants.vcf |grep 'SNV' |awk -F'TIG_REGION=' '{print $2}' |less -S |awk -F',' '{print $1}') > SNV.bed
+  paste <(grep 'SNV' variants.vcf |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$3,$2+1,"SNV",1,hap,"1|."}') <(grep 'SNV' variants.vcf |awk -F'TIG_REGION=' '{print $2}' | awk -F',' '{print $1}') > SNV.bed
   cat SNV.bed >> LSGvar.bed
 fi
 
 if $process_ins; then
-  paste <(less -S variants.vcf |grep 'INS' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$3}') <(less -S variants.vcf |grep 'INS' |awk -F'[-\t]' -v hap=${hap} 'OFS="\t"{print $2+1,"INS",$6,hap,"1|."}' |less -S) <(less -S variants.vcf |grep 'INS'|awk -F'TIG_REGION=' '{print $2}' |less -S |awk -F',' '{print $1}') > INS.bed
+  paste <(grep 'INS' variants.vcf |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$3}') <(grep 'INS' variants.vcf |awk -F'[-\t]' -v hap=${hap} 'OFS="\t"{print $2+1,"INS",$6,hap,"1|."}') <(grep 'INS' variants.vcf|awk -F'TIG_REGION=' '{print $2}' |awk -F',' '{print $1}') > INS.bed
   cat INS.bed >> LSGvar.bed
 fi
 
 if $process_del; then
-  paste <(less -S variants.vcf |grep 'DEL' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$3}') <(less -S variants.vcf |grep 'DEL' |awk -F'[-\t]' -v hap=${hap} 'OFS="\t"{print $2+$6,"DEL",$6,hap,"1|."}' |less -S) <(less -S variants.vcf|grep 'DEL' |awk -F'TIG_REGION=' '{print $2}' |less -S |awk -F',' '{print $1}') > DEL.bed
+  paste <(grep 'DEL' variants.vcf |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$3}') <(grep 'DEL' variants.vcf |awk -F'[-\t]' -v hap=${hap} 'OFS="\t"{print $2+$6,"DEL",$6,hap,"1|."}') <(grep 'DEL' variants.vcf |awk -F'TIG_REGION=' '{print $2}' |awk -F',' '{print $1}') > DEL.bed
   cat DEL.bed >> LSGvar.bed
 fi
 
 if $process_trans; then
-  less -S $input_vcf |grep 'TRANS' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-TRANS-"$9,$3,"TRANS",$9,hap,"1|.",$4":"$5"-"$6}' |less -S > TRANS.bed
+  grep 'TRANS' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-TRANS-"$9,$3,"TRANS",$9,hap,"1|.",$4":"$5"-"$6}' > TRANS.bed
   cat TRANS.bed >> LSGvar.bed
 fi
 
 if $process_sdr; then
-  less -S $input_vcf |grep 'NM' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-SDR-"$9,$3,"SDR",$9,hap,"1|.",$4":"$5"-"$6}' |less -S > SDR.bed
-  cat SDR.bed >> LSGvar.bed
+  grep 'SDR_NM' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-SDR-"$9,$3,"SDR",$9,hap,"1|.",$4":"$5"-"$6}' > SDR.bed
+  grep 'SV_NM' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-SDR-"$9,$3,"SDR",$9,hap,"1|.",$4":"$5"-"$6}' > SV_NM.bed
+  grep 'SDR_NM(INV)' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-SDR-"$9,$3,"SDR(INV)",$9,hap,"1|.",$4":"$5"-"$6}' > SDR_NMINV.bed
+  grep 'SV_NM(INV)' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-SDR-"$9,$3,"SDR(INV)",$9,hap,"1|.",$4":"$5"-"$6}' > SV_NMINV.bed
+  grep 'INV-INV' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-SDR-"$9,$3,"INV-INV",$9,hap,"1|.",$4":"$5"-"$6}' > INV_INV.bed
+  cat SDR.bed SV_NM.bed SDR_NMINV.bed SV_NMINV.bed INV_INV.bed >> LSGvar.bed
 fi
 
 if $process_dup; then
-  less -S $input_vcf |grep 'DUP' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-DUP-"$9,$3,"DUP",$9,hap,"1|.",$4":"$5"-"$6}' |less -S > DUP.bed
+  grep 'DUP' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-DUP-"$9,$3,"DUP",$9,hap,"1|.",$4":"$5"-"$6}' > DUP.bed
   cat DUP.bed >> LSGvar.bed
 fi
 
 if $process_highdup; then
-  less -S $input_vcf |grep 'high-dup' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-HighDup",$3,"HighDup",".",hap,"1|.","."}' |less -S > Highdup.bed
+  grep 'high-dup' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-HighDup",$3,"HighDup",".",hap,"1|.","."}' > Highdup.bed
   cat Highdup.bed >> LSGvar.bed
 fi
 
 if $process_inv; then
-  less -S $input_vcf |grep 'INV' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-INV-"$9,$3,"INV",$9,hap,"1|.",$4":"$5"-"$6}' |less -S > INV.bed
-  cat INV.bed >> LSGvar.bed
+  grep 'SDR_INV' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-INV-"$9,$3,"INV",$9,hap,"1|.",$4":"$5"-"$6}' > SDR_INV.bed
+  grep 'SV_INV' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-INV-"$9,$3,"INV",$9,hap,"1|.",$4":"$5"-"$6}' > SV_INV.bed
+  cat SDR_INV.bed SV_INV.bed >> LSGvar.bed
 fi
 
 if $process_complex; then
-  less -S $input_vcf |grep 'COMPLEX' |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-SDR_COMPLEX-"$9,$3,"SDR_COMPLEX",$9,hap,"1|.",$4":"$5"-"$6}' |less -S > complex.bed
+  grep 'COMPLEX' "$input_vcf" |awk -v hap=${hap} 'OFS="\t"{print $1,$2,$1"-"$2"-SDR_COMPLEX-"$9,$3,"SDR_COMPLEX",$9,hap,"1|.",$4":"$5"-"$6}' > complex.bed
   cat complex.bed >> LSGvar.bed
 fi
 
-less -S LSGvar.bed | awk 'OFS="\t"{print $1,$2,$4,$3,$5,$6,$7,$8,$9}' > $bed_output
+awk 'OFS="\t"{print $1,$2,$4,$3,$5,$6,$7,$8,$9}' LSGvar.bed > $bed_output
 
-rm -f SDRend.txt addout.txt *.bed *.vcf CIGARend.txt oursnv.txt ourinsend.txt ourdelend.txt ourinvend.txt
+rm -f SDRend.txt addout.txt *.bed *.vcf CIGARend.txt oursnv.txt ourinsend.txt ourdelend.txt ourinvend.txt vcf_header.txt
 
-echo "Done! Processed variant type: $variant_type"
+log "INFO" "Done! Created bed file for $variant_type"
