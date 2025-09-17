@@ -168,17 +168,62 @@ split_region<-function(pos.chr.region,cluster.id,clusterparas){
 }
 
 #-------------------function5 plot ----------------------
-
-dotplot_cluster<-function(plotpos,region){
-  plotpos<-reverse_xy(plotpos) 
-  if(!missing(region)){plotpos<-plotpos[plotpos$ref_end<region[2] & plotpos$ref_start>region[1],]}
-  plot <- ggplot(plotpos, aes(x = NULL, y = NULL)) +
-    geom_segment(aes(x = ref_start, y = query_start, xend = ref_end, yend = query_end,color = as.factor(cluster)), size = 1, arrow = arrow(length = unit(0.3, "cm"))) +
-    ggtitle("Segments") +
-    xlab("X-axis") +
-    ylab("Y-axis")
-  plotly_obj <- ggplotly(plot, tooltip = c("ref_start", "query_start", "ref_end", "query_end"))
+dotplot_cluster <- function(plotpos, region, pdf_file = NULL) {
+  plotpos <- reverse_xy(plotpos) 
+  
+  if (!missing(region)) {
+    plotpos <- plotpos[plotpos$ref_end < region[2] & plotpos$ref_start > region[1], ]
+  }
+  
+  has_cluster <- "cluster" %in% colnames(plotpos)
+  
+  plot <- ggplot(plotpos, aes(x = ref_start, y = query_start)) +
+    geom_segment(
+      aes(
+        xend = ref_end,
+        yend = query_end,
+        color = if (has_cluster) paste("Cluster", cluster, "(", query_chr, ")") else NULL
+      ),
+      size = 0.8,
+      arrow = arrow(length = unit(0.15, "cm"))
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+      legend.position = if (has_cluster) "right" else "none",  
+      legend.text = element_text(size = 10)
+    ) +
+    labs(
+      title = "Dot Plot of Segments",
+      x = "Reference Position",
+      y = "Query Position"
+    )
+  
+  if (has_cluster) {
+    plot <- plot + scale_color_viridis_d(
+      name = "Cluster (Query Chr)",  
+      option = "plasma"
+    )
+  } else {
+    plot <- plot + scale_color_manual(values = "black", guide = "none")
+  }
+  
+  plotly_obj <- ggplotly(plot, tooltip = c("ref_start", "query_start", "ref_end", "query_end", if (has_cluster) "cluster", "query_chr"))
+  
+  if (!is.null(pdf_file)) {
+    ggsave(
+      filename = pdf_file,
+      plot = plot,
+      device = "pdf",
+      width = 10,
+      height = 7,
+      units = "in"
+    )
+  }
+  
+  return(plotly_obj)
 }
+
 
 inte.minud<-function(endcluster1,id){
   if(id==1){
@@ -711,7 +756,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
       }
     }
     if(cluster.id==2){
-      if(dim(chrchch)[1]!=1 & dim(chrchch)[1]>0){
+      if(dim(chrchch)[1]!=1 & dim(chrchch)[1]>2){
         for (i in 2:dim(chrchch)[1]-1){
           if(((i != dim(chrchch)[1]-1) & (chrchch[i,]$`(names(which.max(table(orient))))` != '-') & (chrchch[i+1,]$`(names(which.max(table(orient))))` != '-')) | (i == dim(chrchch)[1]-1)){
           if(as.numeric(chrchch$ref_end[i])==chrchch$ref_start[i+1]){
@@ -744,7 +789,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
     
     chrchch<-distinct(chrchch)
     if(cluster.id==3){
-      if(dim(chrchch)[1]!=1){
+      if(dim(chrchch)[1]!=1 & dim(chrchch)[1]>2){
         for (i in 2:dim(chrchch)[1]-1){
           if(((i != dim(chrchch)[1]-1) & (chrchch[i,]$`(names(which.max(table(orient))))` != '-') & (chrchch[i+1,]$`(names(which.max(table(orient))))` != '-')) | (i == dim(chrchch)[1]-1)){
           if(as.numeric(chrchch$ref_end[i])==chrchch$ref_start[i+1]){
@@ -909,22 +954,25 @@ repeat.integrate<-function(data,repeatid){
 }
 
 #-------------------function7 merge results ----------------------
-endfilter<-function(all,chrid,chr_child){
+endfilter<-function(all,chrid,chr_child,distance){
   data<-all
   data$reflen<-data$ref_end-data$ref_start
   data$querylen<-data$query_end-data$query_start
+  write.csv(data,"test.csv")
+  distance <- as.integer(distance)
+  print(distance)
   if(nrow(data[(data$reflen<10000 & data$querylen<10000) & data$anno=="SDR_NM",])!=0){
     data[(data$reflen<10000 & data$querylen<10000) & data$anno=="SDR_NM",]$anno<-"SV_NM"
   }
   
-  if(length(which(data$reflen==0 & data$querylen>=10000))!=0){
-    data[data$reflen==0 & data$querylen>=10000,]$anno<-"SDR_INS"
+  if(length(which(data$reflen<=distance & data$querylen>=10000 & data$reflen>=0))!=0){
+    data[data$reflen<=distance & data$querylen>=10000 & data$reflen>=0,]$anno<-"SDR_INS"
   }
   if(length(which(data$reflen==0 & data$querylen<10000))!=0){
     data[data$reflen==0 & data$querylen<10000,]$anno<-"SV_INS"
   }
-  if(length(which(data$querylen==0 & data$reflen>=10000))!=0){
-    data[data$querylen==0 & data$reflen>=10000,]$anno<-"SDR_DEL"
+  if(length(which(data$querylen<=distance & data$reflen>=10000 & data$querylen>=0))!=0){
+    data[data$querylen<=distance & data$reflen>=10000 & data$querylen>=0,]$anno<-"SDR_DEL"
   }
   if(length(which(data$querylen==0 & data$reflen<10000))!=0){
     data[data$querylen==0 & data$reflen<10000,]$anno<-"SV_DEL"
