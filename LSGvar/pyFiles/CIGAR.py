@@ -1,11 +1,14 @@
 ##module load bedtools
 ##load packages
+import re
+import time
+import logging
+import argparse
 import subprocess
 from Bio import SeqIO
-import re
 from multiprocessing import Pool
-import time
-import argparse
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 parser = argparse.ArgumentParser(description='CIGAR-CALCULATE')
 parser.add_argument('--p', help='number of process')
 parser.add_argument('--r', help='Reference fasta')
@@ -13,7 +16,6 @@ parser.add_argument('--q', help='query fasta')
 parser.add_argument('--paf', help='alignment paf file')
 parser.add_argument('--o', help='output dir')
 args = parser.parse_args()
-print(args.p)
 
 QUERY =args.q
 REF =args.r
@@ -145,7 +147,7 @@ with open(paf, 'r') as infile, open(args.o, 'w') as outfile:
 	with Pool(processes=20) as pool:
 		results = pool.map(process_cigar, infile)
 	b=time.time()
-print(f"Processing time: {(b-a)/60:.2f} minutes")
+logging.info(f"Cigar processing time: {(b-a)/60:.2f} minutes")
  
 subprocess.run(f"rm query.bed", shell=True)
 subprocess.run(f"rm que.fa", shell=True)
