@@ -1,6 +1,7 @@
 import subprocess
 from Bio import SeqIO
 import re
+import os
 from multiprocessing import Pool
 import pandas as pd
 import numpy as np
@@ -42,7 +43,7 @@ with open(args.o, 'w') as file:
 		selected_quefa = str(querysequences[que_chr+":"+str(que_start)+"-"+str(que_end)+"("+minus+")"])
 		three=ref_chr+"-"+str(ref_start)+"-"+"INV"+"-"+str(lenall)
 		emp="."
-		alllen="ID="+three+";"+"SVTYPE=INV;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+","+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
+		alllen="ID="+three+";"+"SVTYPE=INV;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
 		GT="GT"
 		phase="1|0"
 		file.write(f"{ref_chr}\t{ref_start}\t{three}\t{selected_reffa}\t{selected_quefa}\t{emp}\t{emp}\t{alllen}\t{GT}\t{phase}\n")  
@@ -68,7 +69,7 @@ with open(args.o, 'w') as file:
 		selected_quefa = str(querysequences[que_chr+":"+str(que_start-1)+"-"+str(que_end)+"("+minus+")"])
 		three=ref_chr+"-"+str(ref_start)+"-"+"INS"+"-"+str(lenall)
 		emp="."
-		alllen="ID="+three+";"+"SVTYPE=INS;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+","+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
+		alllen="ID="+three+";"+"SVTYPE=INS;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
 		GT="GT"
 		phase="1|0"
 		file.write(f"{ref_chr}\t{ref_start}\t{three}\t{selected_reffa}\t{selected_quefa}\t{emp}\t{emp}\t{alllen}\t{GT}\t{phase}\n")  
@@ -94,7 +95,11 @@ with open(args.o, 'w') as file:
 		selected_quefa = str(querysequences[que_chr+":"+str(que_start-1)+"-"+str(que_end)+"("+minus+")"])
 		three=ref_chr+"-"+str(ref_start)+"-"+"DEL"+"-"+str(lenall)
 		emp="."
-		alllen="ID="+three+";"+"SVTYPE=DEL;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+","+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
+		alllen="ID="+three+";"+"SVTYPE=DEL;SVLEN="+str(lenall)+";TIG_REGION="+que_chr+":"+str(que_start)+"-"+str(que_end)+";"+"QUERY_STRAND=+,+"
 		GT="GT"
 		phase="1|0"
-		file.write(f"{ref_chr}\t{ref_start}\t{three}\t{selected_reffa}\t{selected_quefa}\t{emp}\t{emp}\t{alllen}\t{GT}\t{phase}\n")  
+		file.write(f"{ref_chr}\t{ref_start}\t{three}\t{selected_reffa}\t{selected_quefa}\t{emp}\t{emp}\t{alllen}\t{GT}\t{phase}\n")
+    
+rm_file = ["ref.fa", "que.fa", "ins.csv", "del.csv", "inv.csv"]  
+for file in rm_file:
+    os.remove(file)
