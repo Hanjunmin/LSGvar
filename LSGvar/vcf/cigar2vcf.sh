@@ -275,15 +275,14 @@ fi
 
 awk 'OFS="\t"{print $1,$2,$4,$3,$5,$6,$7,$8,$9}' LSGvar.bed > $bed_output
 
-if [ -f "LSGvarhap2.bed" ]; then
-    awk 'BEGIN{OFS="\t"} {
-        if(NF >= 8) {
-            $8 = ".|1"
-        }
-        print
-    }' LSGvarhap2.bed > temp.bed
+if [ -f "results/LSGvarhap2.bed" ]; then
+    awk 'BEGIN{OFS="\t"} 
+        /^#/ {print; next}  
+        NF >= 8 {$8 = ".|1"}  
+        {print}              
+    ' results/LSGvarhap2.bed > temp.bed
 
-    mv temp.bed LSGvarhap2.bed
+    mv temp.bed results/LSGvarhap2.bed
 fi
 
 rm -f SDRend.txt addout.txt *.bed *.vcf CIGARend.txt oursnv.txt ourinsend.txt ourdelend.txt ourinvend.txt vcf_header.txt temp.bed
