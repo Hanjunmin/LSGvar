@@ -958,9 +958,7 @@ endfilter<-function(all,chrid,chr_child,distance){
   data<-all
   data$reflen<-data$ref_end-data$ref_start
   data$querylen<-data$query_end-data$query_start
-  write.csv(data,"test.csv")
   distance <- as.integer(distance)
-  print(distance)
   if(nrow(data[(data$reflen<10000 & data$querylen<10000) & data$anno=="SDR_NM",])!=0){
     data[(data$reflen<10000 & data$querylen<10000) & data$anno=="SDR_NM",]$anno<-"SV_NM"
   }
