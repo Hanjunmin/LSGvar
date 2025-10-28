@@ -691,7 +691,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
     
     if(cluster.id==0){
       
-      if(dim(chrchch)[1]!=1){
+      if(dim(chrchch)[1]>1){
         for (i in 1:dim(chrchch)[1]){
           if(((i != dim(chrchch)[1]) & (chrchch[i,]$`(names(which.max(table(orient))))` != '-') & (chrchch[i+1,]$`(names(which.max(table(orient))))` != '-')) | (i == dim(chrchch)[1])){
 
@@ -756,7 +756,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
       }
     }
     if(cluster.id==2){
-      if(dim(chrchch)[1]!=1 & dim(chrchch)[1]>2){
+      if(dim(chrchch)[1]>1){
         for (i in 2:dim(chrchch)[1]-1){
           if(((i != dim(chrchch)[1]-1) & (chrchch[i,]$`(names(which.max(table(orient))))` != '-') & (chrchch[i+1,]$`(names(which.max(table(orient))))` != '-')) | (i == dim(chrchch)[1]-1)){
           if(as.numeric(chrchch$ref_end[i])==chrchch$ref_start[i+1]){
@@ -789,7 +789,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
     
     chrchch<-distinct(chrchch)
     if(cluster.id==3){
-      if(dim(chrchch)[1]!=1 & dim(chrchch)[1]>2){
+      if(dim(chrchch)[1]>1){
         for (i in 2:dim(chrchch)[1]-1){
           if(((i != dim(chrchch)[1]-1) & (chrchch[i,]$`(names(which.max(table(orient))))` != '-') & (chrchch[i+1,]$`(names(which.max(table(orient))))` != '-')) | (i == dim(chrchch)[1]-1)){
           if(as.numeric(chrchch$ref_end[i])==chrchch$ref_start[i+1]){
@@ -820,7 +820,7 @@ reverse.region<-function(endcluster1,chrid,cluster.id,add){
   rm(list=unique(endcluster1$query_chr)) 
   
   
-  if(cluster.id==2 |cluster.id==3){
+  if(cluster.id==2 | cluster.id==3){
     allchr.reverse<-allchr.reverse[-1,]
   }
   if(nrow(allchr.reverse)!=0){
