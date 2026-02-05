@@ -1,4 +1,3 @@
-# MiTool
 # LSGvar -- Large-Scale Genomic VARiation caller
 LSGvar is a caller for comprehensive large-scale structural variants detection based on assemblies, demonstrating superior performance in cross-species variant identification, particularly in inversion detection, compared to existing tools.
 ## Configuration
